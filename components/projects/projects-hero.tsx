@@ -1,0 +1,118 @@
+// components/projects/projects-hero.tsx
+// "ALL THE KCATCH." hero section for Projects page.
+// References: Projects.png
+
+import { Sticker } from "@/components/graphics/sticker";
+import { KcatchTape } from "@/components/graphics/kcatch-tape";
+import { HandwrittenNote } from "@/components/graphics/handwritten-note";
+import { Checkerboard } from "@/components/graphics/checkerboard";
+import { Reveal } from "@/components/motion/reveal";
+import { Container } from "@/components/layout/container";
+
+export function ProjectsHero() {
+  return (
+    <section
+      className="relative overflow-hidden bg-kc-black pt-28 pb-0"
+      aria-label="Projects hero"
+      data-section="projects-hero"
+    >
+      {/* Background image slot */}
+      {/* TODO: replace with approved camera/studio photography */}
+      <div
+        className="absolute inset-0 -z-10"
+        aria-hidden="true"
+      >
+        <div
+          className="w-full h-full"
+          style={{
+            background:
+              "linear-gradient(135deg, #05070B 0%, #0a0f1e 40%, #1a1f3a 70%, #05070B 100%)",
+          }}
+        />
+      </div>
+      <div
+        className="absolute inset-0 -z-10"
+        style={{
+          background:
+            "linear-gradient(to right, rgba(5,7,11,0.9) 0%, rgba(5,7,11,0.5) 60%, transparent 100%)",
+        }}
+        aria-hidden="true"
+      />
+
+      <Container className="pb-12">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-end">
+          {/* Left: headline */}
+          <div>
+            <Reveal direction="up">
+              <h1
+                className="font-display text-kc-yellow uppercase leading-none"
+                style={{ fontSize: "clamp(4rem, 11vw, 10rem)" }}
+              >
+                <span className="block">ALL</span>
+                <span className="block">THE</span>
+                <span className="block">KCATCH.</span>
+              </h1>
+            </Reveal>
+
+            <Reveal direction="up" delay={0.15}>
+              <p className="font-body text-kc-muted text-sm md:text-base leading-relaxed mt-4 max-w-md uppercase tracking-wide">
+                A COLLECTION OF IDEAS THAT MADE PEOPLE LOOK.
+              </p>
+            </Reveal>
+          </div>
+
+          {/* Right: decorative annotation block */}
+          <div className="hidden lg:flex flex-col items-end gap-6">
+            <div
+              className="font-display uppercase text-kc-white/80 text-right leading-none"
+              style={{ fontSize: "clamp(1.5rem, 3vw, 2.5rem)" }}
+              aria-hidden="true"
+            >
+              <div>CAMPAIGNS</div>
+              <div>CONTENT</div>
+              <div>CULTURE</div>
+              <div>STORIES</div>
+            </div>
+
+            {/* Yellow sticker/badge */}
+            <div
+              className="bg-kc-yellow text-kc-black font-display text-sm uppercase px-4 py-2 rotate-[-2deg]"
+              aria-hidden="true"
+            >
+              SAME IDEAS<br />BIGGER IMPACT
+            </div>
+
+            <HandwrittenNote
+              text="IDEAS BRANDS CULTURE PEOPLE"
+              size="sm"
+              color="white"
+              rotation={-2}
+            />
+
+            {/* TODO: camera sticker slot */}
+            <Sticker
+              alt="KCATCH camera graphic"
+              placeholder="CAMERA\nSTICKER"
+              width={100}
+              height={100}
+              rotation={8}
+            />
+          </div>
+        </div>
+      </Container>
+
+      {/* Yellow tape + checkerboard — same tape language as the Home hero */}
+      <div className="relative w-full" aria-hidden="true">
+        <div className="absolute right-0 top-1/2 -translate-y-1/2 z-30">
+          <Checkerboard height="md" density="tight" colorA="#fff000" colorB="#000000" className="w-16 md:w-24 lg:w-32" />
+        </div>
+        <KcatchTape
+          text="KCATCH THE EYE"
+          marquee
+          variant="yellow"
+          rotation={0}
+        />
+      </div>
+    </section>
+  );
+}

@@ -1,26 +1,333 @@
 @import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
 
+@custom-variant dark (&:is(.dark *));
+
+/* ===================================================
+   KCATCH DESIGN TOKENS
+   =================================================== */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* KCATCH Brand Colors */
+  --kc-blue: #283474;
+  --kc-yellow: #fff000;
+  --kc-black: #05070b;
+  --kc-white: #ffffff;
+  --kc-paper: #f4f1e8;
+  --kc-muted: #b8bdca;
+  --kc-line: rgba(255, 255, 255, 0.18);
+  --kc-line-dark: rgba(255, 255, 255, 0.08);
+
+  /* Semantic canvas */
+  --kc-canvas: #05070b;
+  --kc-surface: #0d1117;
+  --kc-surface-2: #111827;
+
+  /* Typography tokens */
+  --font-display: var(--font-bebas), "Arial Narrow", "Impact", sans-serif;
+  --font-body: var(--font-inter), "Arial", sans-serif;
+  --font-hand: var(--font-caveat), "Comic Sans MS", cursive;
+
+  /* Type scale */
+  --type-display-xl: clamp(4rem, 10vw, 10rem);
+  --type-display-lg: clamp(3rem, 7vw, 7rem);
+  --type-display-md: clamp(2.5rem, 5vw, 5rem);
+  --type-heading: clamp(1.8rem, 3vw, 3.5rem);
+  --type-body: 1rem;
+  --type-meta: 0.8rem;
+
+  /* Spacing */
+  --section-pad-y: clamp(4rem, 10vw, 8rem);
+  --section-pad-x: clamp(1.5rem, 5vw, 6rem);
+  --gutter: clamp(1.5rem, 4vw, 5rem);
+
+  /* Motion */
+  --motion-fast: 0.2s;
+  --motion-normal: 0.45s;
+  --motion-slow: 0.8s;
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out: cubic-bezier(0.87, 0, 0.13, 1);
+
+  /* Shadcn compatibility */
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.145 0 0);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.145 0 0);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.145 0 0);
+  --primary: oklch(0.205 0 0);
+  --primary-foreground: oklch(0.985 0 0);
+  --secondary: oklch(0.97 0 0);
+  --secondary-foreground: oklch(0.205 0 0);
+  --muted: oklch(0.97 0 0);
+  --muted-foreground: oklch(0.556 0 0);
+  --accent: oklch(0.97 0 0);
+  --accent-foreground: oklch(0.205 0 0);
+  --destructive: oklch(0.577 0.245 27.325);
+  --border: oklch(0.922 0 0);
+  --input: oklch(0.922 0 0);
+  --ring: oklch(0.708 0 0);
+  --radius: 0.625rem;
+  --sidebar: oklch(0.985 0 0);
+  --sidebar-foreground: oklch(0.145 0 0);
+  --sidebar-primary: oklch(0.205 0 0);
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.97 0 0);
+  --sidebar-accent-foreground: oklch(0.205 0 0);
+  --sidebar-border: oklch(0.922 0 0);
+  --sidebar-ring: oklch(0.708 0 0);
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
+  --font-sans: var(--font-body);
   --font-mono: var(--font-geist-mono);
+  --font-heading: var(--font-display);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+
+  /* KCATCH color utilities */
+  --color-kc-yellow: var(--kc-yellow);
+  --color-kc-blue: var(--kc-blue);
+  --color-kc-black: var(--kc-black);
+  --color-kc-white: var(--kc-white);
+  --color-kc-paper: var(--kc-paper);
+  --color-kc-muted: var(--kc-muted);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+/* ===================================================
+   BASE STYLES
+   =================================================== */
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+    box-sizing: border-box;
+  }
+
+  html {
+    background-color: var(--kc-black);
+    color: var(--kc-white);
+    font-family: var(--font-body);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    /* Prevent horizontal overflow */
+    overflow-x: hidden;
+  }
+
+  body {
+    background-color: var(--kc-black);
+    color: var(--kc-white);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Focus styles */
+  :focus-visible {
+    outline: 2px solid var(--kc-yellow);
+    outline-offset: 2px;
+  }
+
+  /* Selection */
+  ::selection {
+    background-color: var(--kc-yellow);
+    color: var(--kc-black);
+  }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar {
+    width: 4px;
+  }
+  ::-webkit-scrollbar-track {
+    background: var(--kc-black);
+  }
+  ::-webkit-scrollbar-thumb {
+    background: var(--kc-blue);
+    border-radius: 2px;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+/* ===================================================
+   TYPOGRAPHY UTILITIES
+   =================================================== */
+@layer utilities {
+  .font-display {
+    font-family: var(--font-display);
+  }
+
+  .font-body {
+    font-family: var(--font-body);
+  }
+
+  .font-hand {
+    font-family: var(--font-hand);
+  }
+
+  /* KCATCH text sizes */
+  .text-display-xl {
+    font-size: var(--type-display-xl);
+    line-height: 0.95;
+    letter-spacing: -0.02em;
+  }
+
+  .text-display-lg {
+    font-size: var(--type-display-lg);
+    line-height: 0.95;
+    letter-spacing: -0.01em;
+  }
+
+  .text-display-md {
+    font-size: var(--type-display-md);
+    line-height: 1;
+  }
+
+  .text-kc-heading {
+    font-size: var(--type-heading);
+    line-height: 1.1;
+  }
+
+  /* KCATCH Colors */
+  .text-kc-yellow {
+    color: var(--kc-yellow);
+  }
+  .text-kc-blue {
+    color: var(--kc-blue);
+  }
+  .text-kc-black {
+    color: var(--kc-black);
+  }
+  .text-kc-white {
+    color: var(--kc-white);
+  }
+  .text-kc-paper {
+    color: var(--kc-paper);
+  }
+  .text-kc-muted {
+    color: var(--kc-muted);
+  }
+
+  .bg-kc-black {
+    background-color: var(--kc-black);
+  }
+  .bg-kc-yellow {
+    background-color: var(--kc-yellow);
+  }
+  .bg-kc-blue {
+    background-color: var(--kc-blue);
+  }
+  .bg-kc-paper {
+    background-color: var(--kc-paper);
+  }
+  .bg-kc-white {
+    background-color: var(--kc-white);
+  }
+  .bg-kc-surface {
+    background-color: var(--kc-surface);
+  }
+
+  /* Border */
+  .border-kc-line {
+    border-color: var(--kc-line);
+  }
+
+  /* Section padding */
+  .section-pad {
+    padding-top: var(--section-pad-y);
+    padding-bottom: var(--section-pad-y);
+    padding-left: var(--gutter);
+    padding-right: var(--gutter);
+  }
+
+  .section-pad-x {
+    padding-left: var(--gutter);
+    padding-right: var(--gutter);
+  }
+
+  /* Hides scrollbar on native horizontal carousels (mobile Featured Work) */
+  .scrollbar-none {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  .scrollbar-none::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+/* ===================================================
+   REDUCED MOTION
+   =================================================== */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ===================================================
+   CHECKERBOARD PATTERN
+   =================================================== */
+.kc-checker {
+  background-image:
+    linear-gradient(45deg, var(--kc-black) 25%, transparent 25%),
+    linear-gradient(-45deg, var(--kc-black) 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, var(--kc-black) 75%),
+    linear-gradient(-45deg, transparent 75%, var(--kc-black) 75%);
+  background-size: 12px 12px;
+  background-position:
+    0 0,
+    0 6px,
+    6px -6px,
+    -6px 0;
+  background-color: var(--kc-white);
+}
+
+/* ===================================================
+   TAPE STRIPE ANIMATION
+   =================================================== */
+.kc-tape-marquee {
+  animation: tape-scroll 20s linear infinite;
+}
+
+@keyframes tape-scroll {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .kc-tape-marquee {
+    animation: none;
+  }
 }
