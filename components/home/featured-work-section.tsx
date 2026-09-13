@@ -73,12 +73,31 @@ export function FeaturedWorkSection() {
 
     const reduced = prefersReducedMotion();
     const track = trackRef.current;
-    const getScrollAmount = () => track.scrollWidth - window.innerWidth;
 
-    const tween = gsap.to(track, {
-      x: () => -getScrollAmount(),
-      ease: "none",
-    });
+    // The ONLY reliable source of the horizontal scroll distance is a
+    // fresh DOM measurement on every scroll tick, NOT a value cached at
+    // mount time. Previously this used:
+    //
+    //   const tween = gsap.to(track, { x: () => -getScrollAmount() });
+    //   ScrollTrigger.create({ animation: tween, scrub: 1, ... });
+    //
+    // GSAP evaluates the function value ONCE when the tween is created
+    // (inside useGSAP on mount — before any images are decoded, before
+    // Lenis has settled, before fonts have shifted layout). The resulting
+    // cached x-end value was consistently too small, which cut the pin
+    // range short and produced the "can't scroll past project 4" symptom.
+    //
+    // The fix: drive track translation entirely from onUpdate. We read
+    // track.scrollWidth on every scroll tick — the DOM has always had
+    // the correct width by the time the user is actually scrolling — and
+    // use document.documentElement.clientWidth (excludes scrollbar) rather
+    // than window.innerWidth for accuracy.
+    //
+    // No `animation` property on the ScrollTrigger — GSAP's scrub proxy
+    // is replaced by a direct gsap.set() call that is 100% driven by
+    // the live progress value ScrollTrigger provides.
+    const getScrollAmount = () =>
+      track.scrollWidth - document.documentElement.clientWidth;
 
     // Each project gets an equal "active window" along the 0-1 global
     // progress. Project i's own progress reaches 1 (fully settled) at
@@ -159,46 +178,36 @@ export function FeaturedWorkSection() {
     };
 
     // Prime the first frame before any scroll happens so Project 01
-    // renders already-settled, not mid-entrance. Cheap — gsap.set() on
-    // already-known refs, no layout measurement — so this runs
-    // immediately rather than waiting for the preloader gate below.
+    // renders already-settled, not mid-entrance.
     applySceneState(0);
+    gsap.set(track, { x: 0, force3D: true });
 
-    // ScrollTrigger.create() itself is built here (so it's tracked by
-    // this useGSAP call's context for revert-on-unmount) but only
-    // INVOKED once the preloader signals it's exiting (see the separate
-    // effect below) — it reads track.scrollWidth and the section's own
-    // document position, which is real synchronous layout work, and
-    // doing that at the exact same moment the preloader's curtain and
-    // the Hero's own entrance timeline are both animating is unnecessary
-    // main-thread contention during the busiest possible window. The
-    // user cannot scroll here anyway until the preloader unlocks body
-    // scroll, so nothing is lost by setting this section's pin up a beat
-    // later.
     createScrollTriggerRef.current = () => {
       ScrollTrigger.create({
         trigger: sectionRef.current,
-        // "top top": the pin engages exactly when the section's own top
-        // reaches the viewport top, so Project 01's frame is composed
-        // cleanly inside the viewport from the first moment of the pin —
-        // not partway through, which is what "center center" produced
-        // (the section — and therefore project 01 — was already
-        // half-scrolled-past by the time the pin actually engaged).
         start: "top top",
+        // end is a function so GSAP re-evaluates it on every refresh().
+        // clientWidth excludes the scrollbar (innerWidth includes it),
+        // preventing a 15-17px under-count that was also trimming the range.
         end: () => `+=${getScrollAmount()}`,
         pin: true,
-        animation: tween,
-        scrub: 1,
+        scrub: 0.6,
         invalidateOnRefresh: true,
+        onRefresh: (self) => {
+          // Re-prime scene state AND reset track to the correct x position
+          // for the current progress so there's no visible jump after refresh.
+          gsap.set(track, { x: -getScrollAmount() * self.progress, force3D: true });
+          applySceneState(self.progress);
+        },
         onUpdate: (self) => {
+          // Fresh measurement on every tick — this is the key fix.
+          // getScrollAmount() reads track.scrollWidth which the browser
+          // always has correct by the time the user is actually scrolling.
+          gsap.set(track, { x: -getScrollAmount() * self.progress, force3D: true });
           applySceneState(self.progress);
           // Same window model as applySceneState: project i owns the
           // range [i/total, (i+1)/total), so the displayed index always
-          // matches whichever scene is actually dominant on screen. This
-          // must stay the exact same formula as applySceneState's own
-          // per-project window math — a different mapping here (e.g.
-          // dividing by total-1 instead of total) desyncs the counter from
-          // the visual state by up to half a project late in the sequence.
+          // matches whichever scene is actually dominant on screen.
           const index = Math.min(total - 1, Math.floor(self.progress * total));
           setActiveIndex(index);
         },
@@ -210,8 +219,22 @@ export function FeaturedWorkSection() {
   // React-managed cleanup — see the comment on createScrollTriggerRef.
   useEffect(() => {
     return onPreloaderDone(() => {
+      // The 1000ms delay ensures the Hero entrance is done before we do
+      // the layout measurement. However that's still not enough on slower
+      // machines/connections because Next.js Image components (which are
+      // all in this track) may not have painted their final sizes yet.
+      // We create the ScrollTrigger first, then call ScrollTrigger.refresh()
+      // a further 400ms later so the scrub end-distance is re-calculated
+      // against the fully-rendered, fully-settled DOM. This is the root
+      // cause of the intermittent "can't scroll past project 3" bug:
+      // the first measurement was producing a scrollWidth that was 0-200px
+      // too short, cutting the pin range short.
       setTimeout(() => {
         createScrollTriggerRef.current?.();
+        // Second pass: re-measure after images have decoded and laid out.
+        setTimeout(() => {
+          ScrollTrigger.refresh();
+        }, 400);
       }, 1000);
     });
   }, []);

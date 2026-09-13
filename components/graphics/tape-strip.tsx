@@ -15,6 +15,13 @@
 //   - checker variant: an oversized checker-pattern layer is translated
 //     by exactly one checker tile period and loops seamlessly — same
 //     mechanism as the text marquee, just without a DOM text track.
+//
+// ENTRANCE ANIMATION (`animateIn` prop):
+//   When true the whole ribbon starts 110% off-screen (outside the overflow-
+//   hidden parent), then slides in via a GSAP tween once an IntersectionObserver
+//   confirms the parent TapeStack is in the viewport.
+//   enterFrom: "left"  → ribbon starts at translateX(-110%) → slides right to 0
+//   enterFrom: "right" → ribbon starts at translateX(+110%) → slides left to 0
 
 import { useRef, useEffect } from "react";
 import gsap from "gsap";
@@ -32,12 +39,24 @@ export type TapeStripProps = {
   className?: string;
   /** Checker cell size in px (checker variant only) */
   checkerSize?: number;
+  // ─── Entrance animation ───────────────────────────────────────────────────
+  /** When true, ribbon starts off-screen and slides in on IntersectionObserver. */
+  animateIn?: boolean;
+  /** Which side the ribbon enters from. Default: "left" */
+  enterFrom?: "left" | "right";
+  /** Delay before entrance starts, seconds. Default: 0 */
+  enterDelay?: number;
+  /**
+   * External trigger ref — when provided, the entrance fires when this element
+   * enters the viewport (not the ribbon's own element). Useful when the
+   * TapeStack is in a full-viewport hero and the observer would fire immediately
+   * on mount regardless of scroll position.
+   */
+  observerTarget?: React.RefObject<Element | null>;
 };
 
 // Irregular top/bottom edge as a clip-path polygon. Points are expressed
 // as percentages so the same shape scales to any width without distortion.
-// Deliberately restrained — a few points of a few percent of the tape's
-// own height, not a cartoon wave.
 const TOP_EDGE: [number, number][] = [
   [0, 3], [8, 0], [19, 2.5], [31, 0.5], [44, 2.5],
   [57, 0], [69, 2], [82, 0.5], [93, 2.5], [100, 0.5],
@@ -63,7 +82,12 @@ export function TapeStrip({
   offsetY = 0,
   className,
   checkerSize = 22,
+  animateIn = false,
+  enterFrom = "left",
+  enterDelay = 0,
+  observerTarget,
 }: TapeStripProps) {
+  const wrapRef  = useRef<HTMLDivElement>(null);
   const trackRef = useRef<HTMLDivElement>(null);
   const segmentRef = useRef<HTMLDivElement>(null);
   const checkerRef = useRef<HTMLDivElement>(null);
@@ -77,15 +101,9 @@ export function TapeStrip({
     checker: "bg-white",
   }[variant];
 
-  // Upright checker squares (racing-flag / zebra-crossing style), not a
-  // 45°-rotated diamond pattern — see components/graphics/checkerboard.tsx
-  // for the same verified repeating-conic-gradient formula. At this
-  // component's typical checkerSize (~20-34px) the previous diagonal
-  // version read as fine dotted texture rather than a deliberate
-  // material; upright squares hold up as a real checker at any size.
   const checkerBgImage = `repeating-conic-gradient(#000 0% 25%, transparent 0% 50%)`;
 
-  // Text marquee (yellow/white/dark)
+  // ── Text marquee ──────────────────────────────────────────────────────────
   useEffect(() => {
     if (isChecker || prefersReducedMotion() || !trackRef.current || !segmentRef.current) return;
 
@@ -123,16 +141,12 @@ export function TapeStrip({
     };
   }, [direction, isChecker]);
 
-  // Checker pattern motion — translate a checker layer twice the strip's
-  // width by exactly one checker period, looping seamlessly. Uses the same
-  // transform-based mechanism as the text marquee (reliable across
-  // browsers, GPU-accelerated) rather than animating background-position
-  // on a multi-layer gradient background.
+  // ── Checker marquee ───────────────────────────────────────────────────────
   useEffect(() => {
     if (!isChecker || prefersReducedMotion() || !checkerRef.current) return;
 
     const sign = direction === "left" ? -1 : 1;
-    const period = checkerSize * 2; // one full checker tile repeat
+    const period = checkerSize * 2;
 
     const tween = gsap.to(checkerRef.current, {
       x: sign * period,
@@ -142,17 +156,57 @@ export function TapeStrip({
       force3D: true,
     });
 
-    return () => {
-      tween.kill();
-    };
+    return () => { tween.kill(); };
   }, [isChecker, direction, checkerSize]);
 
-  // Repeat text so the marquee tiles seamlessly; unused for the checker layer.
+  // ── Entrance animation ─────────────────────────────────────────────────────
+  // The outer wrapper (wrapRef) starts positioned off-screen via the inline
+  // style below. An IntersectionObserver watches the trigger target (the wrapper
+  // itself, or an optional external element like the section heading) and fires
+  // the GSAP slide-in tween once. No polling, no layout thrash.
+  useEffect(() => {
+    if (!animateIn || prefersReducedMotion() || !wrapRef.current) return;
+
+    const wrap = wrapRef.current;
+    const initialX = enterFrom === "left" ? "-110%" : "110%";
+
+    // Pre-position off-screen immediately — before IntersectionObserver fires.
+    gsap.set(wrap, { x: initialX, willChange: "transform" });
+
+    const target = (observerTarget?.current ?? wrap) as Element;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (!entry.isIntersecting) return;
+        observer.disconnect();
+
+        gsap.to(wrap, {
+          x: "0%",
+          duration: 1.1,
+          ease: "power3.out",
+          delay: enterDelay,
+          force3D: true,
+          onComplete: () => {
+            // Release the GPU layer hint once the animation is done.
+            gsap.set(wrap, { willChange: "auto" });
+          },
+        });
+      },
+      // rootMargin: give 40px of room so the observer fires just before the
+      // element fully enters — the ribbon arrives right as the user's eye lands.
+      { threshold: 0, rootMargin: "0px 0px 40px 0px" }
+    );
+
+    observer.observe(target);
+    return () => observer.disconnect();
+  }, [animateIn, enterFrom, enterDelay, observerTarget]);
+
   const repeatedText = Array(12).fill(text).join(" ★ ") + " ★ ";
   const segments = [0, 1, 2];
 
   return (
     <div
+      ref={wrapRef}
       className={cn("absolute top-1/2 left-[-8%] right-[-8%] w-[116%]", className)}
       style={{
         transform: `translateY(calc(-50% + ${offsetY}px)) rotate(${rotation}deg)`,
@@ -168,8 +222,6 @@ export function TapeStrip({
       >
         {isChecker ? (
           <div className="absolute inset-0 overflow-hidden">
-            {/* Oversized by one checker period on each side so translating
-                by exactly that period loops with no visible edge. */}
             <div
               ref={checkerRef}
               className="absolute will-change-transform"

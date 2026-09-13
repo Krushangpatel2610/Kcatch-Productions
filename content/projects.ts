@@ -83,7 +83,7 @@ export const allProjects: Project[] = [
     category: "CAMPAIGNS",
     tags: ["CAMPAIGN", "CELEBRITY", "DIGITAL"],
     description: "Play bold. Play unforgettable.",
-    heroImage: "/Images/Projects/03-RummyCircle.webp",
+    heroImage: "/Images/Projects/03-RummyCircle-Large.png",
     supportingImages: ["/projects/rummy-circle/supporting-01.jpg"],
     featured: true,
     featuredOrder: 3,

@@ -7,7 +7,17 @@
 // Replaces the older pattern of <KcatchTape /> + a thin <Checkerboard />
 // border sitting underneath it — that read as "yellow bar with a border,"
 // not two overlapping pieces of tape.
+//
+// ENTRANCE ANIMATION (`animateIn` prop — default: true):
+//   When true both ribbons slide in from opposite sides simultaneously:
+//     Checker tape: enters from the LEFT  (slides right  → center)
+//     Yellow tape:  enters from the RIGHT (slides left   → center)
+//   The arrival reads as two tapes being slapped down from both sides
+//   at the same moment — physical and immediate.
+//   An IntersectionObserver on the stack wrapper triggers the entrance
+//   once, universally, on every page that uses TapeStack.
 
+import { useRef } from "react";
 import { TapeStrip } from "./tape-strip";
 import { cn } from "@/lib/utils";
 
@@ -18,6 +28,13 @@ type TapeStackProps = {
   /** Direction the checker (back) tape's marquee scrolls */
   checkerDirection?: "left" | "right";
   className?: string;
+  /**
+   * Animate both ribbons in from opposite edges when the stack enters the
+   * viewport. Defaults to true — pass false for tape strips that should
+   * be immediately visible (e.g. mid-page transition strips that are
+   * already below the fold and shouldn't fire on scroll).
+   */
+  animateIn?: boolean;
 };
 
 export function TapeStack({
@@ -25,20 +42,20 @@ export function TapeStack({
   yellowDirection = "left",
   checkerDirection = "right",
   className,
+  animateIn = true,
 }: TapeStackProps) {
+  // The outer wrapper is the IntersectionObserver target for both strips —
+  // a single observation point rather than two per-strip observers.
+  const stackRef = useRef<HTMLDivElement>(null);
+
   return (
     <div
+      ref={stackRef}
       className={cn("relative w-full overflow-x-clip", className)}
       style={{ height: "clamp(80px, 10vw, 128px)" }}
       aria-hidden="true"
     >
-      {/* Back layer: checker tape — offset up, opposite angle, peeks out
-          above/below the yellow tape rather than sitting flush with it.
-          checkerSize is scaled up from the default (22px) specifically
-          because only a thin sliver of this strip's own height is ever
-          visible beyond the yellow tape's edge — at the small default
-          cell size that sliver read as fine dot/noise texture rather
-          than a deliberate racing-checker material. */}
+      {/* Back layer: checker tape — enters from LEFT, scrolls right */}
       <TapeStrip
         text={text}
         variant="checker"
@@ -47,10 +64,13 @@ export function TapeStack({
         offsetY={-10}
         checkerSize={34}
         className="z-10"
+        animateIn={animateIn}
+        enterFrom="left"
+        enterDelay={0}
+        observerTarget={stackRef}
       />
 
-      {/* Front layer: yellow marquee tape — visually dominant, slightly
-          different angle so the checker layer shows through at the edges. */}
+      {/* Front layer: yellow tape — enters from RIGHT, scrolls left */}
       <TapeStrip
         text={text}
         variant="yellow"
@@ -58,6 +78,10 @@ export function TapeStack({
         rotation={1.25}
         offsetY={10}
         className="z-20"
+        animateIn={animateIn}
+        enterFrom="right"
+        enterDelay={0.06}
+        observerTarget={stackRef}
       />
     </div>
   );

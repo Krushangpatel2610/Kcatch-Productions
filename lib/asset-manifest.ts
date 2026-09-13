@@ -19,6 +19,7 @@ export const assetManifest = new Set([
   "/Images/Projects/01-Razorpay.webp",
   "/Images/Projects/02-Zee5.webp",
   "/Images/Projects/03-RummyCircle.webp",
+  "/Images/Projects/03-RummyCircle-Large.png",
   "/Images/Projects/04-Qatar Airways.webp",
   "/Images/Projects/05-My11Circle.webp",
   "/Images/Projects/06-Pokerbazi.webp",
