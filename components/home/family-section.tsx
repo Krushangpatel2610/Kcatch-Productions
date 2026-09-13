@@ -13,6 +13,7 @@ export function FamilySection() {
     <PaperSection
       aria-label="Our Family — Client Logos"
       data-section="family"
+      parallax
     >
       <Container className="pt-16 md:pt-24 pb-20 md:pb-28">
         {/* Header */}

@@ -29,18 +29,23 @@ export function ProjectsCTA() {
             </Reveal>
           </div>
 
-          <div className="flex items-center gap-6">
+          {/* Mascot overlaps the CTA button's corner (relative + negative
+              margin, not just sitting beside it in a flex gap) so it
+              reads as attached to the call-to-action rather than a
+              decorative aside floating next to it. */}
+          <div className="relative flex items-center">
             <Sticker
               src="/Images/PNGs/Banana man Right.png"
               alt="KCATCH character"
-              width={100}
-              height={100}
+              width={150}
+              height={150}
               rotation={-5}
+              className="relative z-10 -mr-6 md:-mr-10"
             />
             <Reveal direction="up" delay={0.15}>
               <Link
                 href="/contact"
-                className="inline-flex items-center gap-3 bg-kc-black text-kc-white font-body text-sm uppercase tracking-widest px-8 py-4 hover:bg-transparent hover:text-kc-black hover:border-kc-black border border-kc-black transition-all duration-300 focus-visible:outline-kc-black group"
+                className="relative inline-flex items-center gap-3 bg-kc-black text-kc-white font-body text-sm uppercase tracking-widest px-8 py-4 hover:bg-transparent hover:text-kc-black hover:border-kc-black border border-kc-black transition-all duration-300 focus-visible:outline-kc-black group"
               >
                 LET&apos;S TALK
                 <ArrowRight

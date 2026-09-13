@@ -37,9 +37,11 @@ import { ProjectScene } from "./project-scene";
 import { ScrollProgress } from "@/components/motion/scroll-progress";
 import { OrbitalIndicator } from "@/components/motion/orbital-indicator";
 import { HandwrittenNote } from "@/components/graphics/handwritten-note";
+import { MaskText } from "@/components/motion/mask-text";
 import { Container } from "@/components/layout/container";
 import { prefersReducedMotion } from "@/lib/motion/reduced-motion";
 import { buildMaskClipPath } from "@/lib/motion/mask-reveal";
+import { onPreloaderDone } from "@/lib/motion/preloader-gate";
 
 // Maps a value from one range to another, clamped to [0,1] output.
 function mapRange(value: number, inMin: number, inMax: number): number {
@@ -55,6 +57,13 @@ export function FeaturedWorkSection() {
   const sectionRef = useRef<HTMLElement>(null);
   const trackRef = useRef<HTMLDivElement>(null);
   const sceneRefs = useRef<(HTMLElement | null)[]>([]);
+  // Holds the "set up the pinned ScrollTrigger" function so the separate
+  // preloader-gate effect below can call it once the gate fires —
+  // useGSAP's own callback return value isn't used as a cleanup hook by
+  // @gsap/react (only its internal context.revert() on unmount is), so
+  // a plain window-event subscription's lifecycle needs a real useEffect
+  // instead, exactly the pattern already used in hero-section.tsx.
+  const createScrollTriggerRef = useRef<(() => void) | null>(null);
 
   useGSAP(() => {
     if (!sectionRef.current || !trackRef.current) return;
@@ -150,30 +159,62 @@ export function FeaturedWorkSection() {
     };
 
     // Prime the first frame before any scroll happens so Project 01
-    // renders already-settled, not mid-entrance.
+    // renders already-settled, not mid-entrance. Cheap — gsap.set() on
+    // already-known refs, no layout measurement — so this runs
+    // immediately rather than waiting for the preloader gate below.
     applySceneState(0);
 
-    ScrollTrigger.create({
-      trigger: sectionRef.current,
-      // "top top": the pin engages exactly when the section's own top
-      // reaches the viewport top, so Project 01's frame is composed
-      // cleanly inside the viewport from the first moment of the pin —
-      // not partway through, which is what "center center" produced
-      // (the section — and therefore project 01 — was already
-      // half-scrolled-past by the time the pin actually engaged).
-      start: "top top",
-      end: () => `+=${getScrollAmount()}`,
-      pin: true,
-      animation: tween,
-      scrub: 1,
-      invalidateOnRefresh: true,
-      onUpdate: (self) => {
-        applySceneState(self.progress);
-        const index = Math.round(self.progress * (total - 1));
-        setActiveIndex(index);
-      },
-    });
+    // ScrollTrigger.create() itself is built here (so it's tracked by
+    // this useGSAP call's context for revert-on-unmount) but only
+    // INVOKED once the preloader signals it's exiting (see the separate
+    // effect below) — it reads track.scrollWidth and the section's own
+    // document position, which is real synchronous layout work, and
+    // doing that at the exact same moment the preloader's curtain and
+    // the Hero's own entrance timeline are both animating is unnecessary
+    // main-thread contention during the busiest possible window. The
+    // user cannot scroll here anyway until the preloader unlocks body
+    // scroll, so nothing is lost by setting this section's pin up a beat
+    // later.
+    createScrollTriggerRef.current = () => {
+      ScrollTrigger.create({
+        trigger: sectionRef.current,
+        // "top top": the pin engages exactly when the section's own top
+        // reaches the viewport top, so Project 01's frame is composed
+        // cleanly inside the viewport from the first moment of the pin —
+        // not partway through, which is what "center center" produced
+        // (the section — and therefore project 01 — was already
+        // half-scrolled-past by the time the pin actually engaged).
+        start: "top top",
+        end: () => `+=${getScrollAmount()}`,
+        pin: true,
+        animation: tween,
+        scrub: 1,
+        invalidateOnRefresh: true,
+        onUpdate: (self) => {
+          applySceneState(self.progress);
+          // Same window model as applySceneState: project i owns the
+          // range [i/total, (i+1)/total), so the displayed index always
+          // matches whichever scene is actually dominant on screen. This
+          // must stay the exact same formula as applySceneState's own
+          // per-project window math — a different mapping here (e.g.
+          // dividing by total-1 instead of total) desyncs the counter from
+          // the visual state by up to half a project late in the sequence.
+          const index = Math.min(total - 1, Math.floor(self.progress * total));
+          setActiveIndex(index);
+        },
+      });
+    };
   }, { scope: sectionRef });
+
+  // A plain effect (not useGSAP) so the subscription has real,
+  // React-managed cleanup — see the comment on createScrollTriggerRef.
+  useEffect(() => {
+    return onPreloaderDone(() => {
+      setTimeout(() => {
+        createScrollTriggerRef.current?.();
+      }, 1000);
+    });
+  }, []);
 
   // Mobile: the track is a native scroll-snap carousel, so track the
   // active index from scroll position instead of GSAP's ScrollTrigger.
@@ -216,9 +257,13 @@ export function FeaturedWorkSection() {
 
     // Desktop: the pinned ScrollTrigger owns scroll position, so move the
     // window scroll to the point in the pin range that matches this index.
+    // Same window-center formula as applySceneState/onUpdate above
+    // ((i + 0.5) / total, not i / (total - 1)) so a next/prev click lands
+    // exactly where that project is fully dominant, not partway into its
+    // neighbor's window.
     const st = ScrollTrigger.getAll().find((t) => t.trigger === sectionRef.current);
     if (!st) return;
-    const progress = clamped / (total - 1);
+    const progress = (clamped + 0.5) / total;
     const target = st.start + (st.end - st.start) * progress;
     window.scrollTo({ top: target, behavior: "smooth" });
   };
@@ -259,13 +304,13 @@ export function FeaturedWorkSection() {
             <p className="font-body text-xs uppercase tracking-widest text-kc-muted mb-3">
               {FEATURED_WORK.sectionLabel}
             </p>
-            <h2
+            <MaskText
+              as="h2"
               className="font-display text-kc-white uppercase leading-none"
               style={{ fontSize: "clamp(2.25rem, 5vw, 4.25rem)" }}
-            >
-              <span className="block">{FEATURED_WORK.headline1}</span>
-              <span className="block text-kc-yellow">{FEATURED_WORK.headline2}</span>
-            </h2>
+              lines={[FEATURED_WORK.headline1, { text: FEATURED_WORK.headline2, className: "text-kc-yellow" }]}
+              stagger={0.1}
+            />
           </div>
 
           {/* Center: annotation words */}
@@ -318,16 +363,22 @@ export function FeaturedWorkSection() {
         data-horizontal-track   → the element that gets translateX
         Each ProjectScene is data-scene="<id>"
       */}
-      {/* Height is svh-relative (not a fixed px max) specifically so the
-          header + this viewport + the progress bar below always fit
-          inside one pinned viewport height without the bottom of the
-          scene (CTA, progress dots) getting pushed past the visible
-          screen on shorter/laptop viewports. */}
+      {/* Height contract is genuinely different per breakpoint, not just
+          smaller numbers: desktop pins the whole scene inside one
+          viewport height (clamp below), so every descendant can safely
+          assume h-full. Mobile is a natural-height, vertically-stacked
+          card (metadata column ABOVE media, not beside it — see
+          project-scene.tsx's flex-col default) that needs to lay out at
+          its own content height; forcing that stack into the same
+          ~360-520px pinned-viewport box is what was clipping/crushing
+          project content on mobile (metadata and media fighting for
+          space that isn't there). h-auto md:h-[...] gives mobile its own
+          natural height while leaving the desktop pinned contract
+          untouched. */}
       <div
-        className="relative overflow-visible"
+        className="relative overflow-visible h-auto md:h-[clamp(360px,48svh,520px)]"
         data-horizontal-section
         data-cursor="drag"
-        style={{ height: "clamp(360px, 48svh, 520px)" }}
       >
         {/* Horizontal track — GSAP applies translateX on desktop.
             On mobile it's a native overflow-x-auto snap carousel instead.
@@ -337,7 +388,7 @@ export function FeaturedWorkSection() {
             trailing side so the last scene gets the same breathing room. */}
         <div
           ref={trackRef}
-          className="flex h-full w-max md:overflow-visible overflow-x-auto snap-x snap-mandatory md:snap-none scrollbar-none pl-6 md:pl-10 pr-6 md:pr-10"
+          className="flex items-stretch h-auto md:h-full w-max md:overflow-visible overflow-x-auto snap-x snap-mandatory md:snap-none scrollbar-none pl-6 md:pl-10 pr-6 md:pr-10"
           data-horizontal-track
         >
           {featuredProjects.map((project, i) => (
@@ -346,7 +397,7 @@ export function FeaturedWorkSection() {
               ref={(el) => {
                 sceneRefs.current[i] = el;
               }}
-              className="h-full flex-shrink-0 w-[90vw] md:w-[88vw] lg:w-[82vw] flex items-center justify-center pr-4 md:pr-8 snap-center"
+              className="h-auto md:h-full flex-shrink-0 w-[90vw] md:w-[88vw] lg:w-[82vw] flex items-center justify-center pr-4 md:pr-8 snap-center"
             >
               <ProjectScene
                 project={project}

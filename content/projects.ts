@@ -53,8 +53,7 @@ export const allProjects: Project[] = [
     tags: ["CAMPAIGN", "DIGITAL", "SOCIAL"],
     description: "Simplifying payments through relatable stories.",
     annotation: "PAYMENTS THAT FIT YOUR WORLD.",
-    // TODO: replace with approved Razorpay campaign asset
-    heroImage: "/projects/razorpay/hero.jpg",
+    heroImage: "/Images/Projects/01-Razorpay.webp",
     supportingImages: ["/projects/razorpay/supporting-01.jpg"],
     featured: true,
     featuredOrder: 1,
@@ -69,8 +68,7 @@ export const allProjects: Project[] = [
     tags: ["CAMPAIGN", "CONTENT", "DIGITAL"],
     description: "Entertainment that lives with you.",
     annotation: "STORIES FOR A BILLION MOODS.",
-    // TODO: replace with approved ZEE5 campaign asset
-    heroImage: "/projects/zee5/hero.jpg",
+    heroImage: "/Images/Projects/02-Zee5.webp",
     supportingImages: ["/projects/zee5/supporting-01.jpg"],
     featured: true,
     featuredOrder: 2,
@@ -85,8 +83,7 @@ export const allProjects: Project[] = [
     category: "CAMPAIGNS",
     tags: ["CAMPAIGN", "CELEBRITY", "DIGITAL"],
     description: "Play bold. Play unforgettable.",
-    // TODO: replace with approved RummyCircle Hrithik campaign asset
-    heroImage: "/projects/rummy-circle/hero.jpg",
+    heroImage: "/Images/Projects/03-RummyCircle.webp",
     supportingImages: ["/projects/rummy-circle/supporting-01.jpg"],
     featured: true,
     featuredOrder: 3,
@@ -101,8 +98,7 @@ export const allProjects: Project[] = [
     tags: ["TRAVEL", "CAMPAIGN", "CONTENT"],
     description: "A higher way to travel.",
     annotation: "JOURNEYS THAT BRING US CLOSER.",
-    // TODO: replace with approved Qatar Airways campaign asset
-    heroImage: "/projects/qatar-airways/hero.jpg",
+    heroImage: "/Images/Projects/04-Qatar Airways.webp",
     supportingImages: ["/projects/qatar-airways/supporting-01.jpg"],
     featured: true,
     featuredOrder: 4,
@@ -116,8 +112,7 @@ export const allProjects: Project[] = [
     category: "CAMPAIGNS",
     tags: ["CAMPAIGN", "SPORTS", "DIGITAL"],
     description: "More than a game.",
-    // TODO: replace with approved MY11Circle campaign asset
-    heroImage: "/projects/my11circle/hero.jpg",
+    heroImage: "/Images/Projects/05-My11Circle.webp",
     featured: false,
     archiveOrder: 5,
   },
@@ -131,8 +126,7 @@ export const allProjects: Project[] = [
     tags: ["CAMPAIGN", "CELEBRITY", "CONTENT"],
     description: "Game on. Always.",
     annotation: "PLAY BIGGER.",
-    // TODO: replace with approved PokerBaazi Shahid campaign asset
-    heroImage: "/projects/pokerbaazi/hero.jpg",
+    heroImage: "/Images/Projects/06-Pokerbazi.webp",
     featured: false,
     archiveOrder: 6,
   },
@@ -145,8 +139,7 @@ export const allProjects: Project[] = [
     tags: ["FASHION", "BRAND", "CONTENT"],
     description: "Style that speaks.",
     annotation: "ONE OF FASHION FIRSTS.",
-    // TODO: replace with approved AZORTE fashion asset
-    heroImage: "/projects/azorte/hero.jpg",
+    heroImage: "/Images/Projects/07-Azorte.webp",
     supportingImages: ["/projects/azorte/supporting-01.jpg"],
     featured: true,
     featuredOrder: 5,
@@ -160,8 +153,7 @@ export const allProjects: Project[] = [
     category: "MUSIC VIDEO",
     tags: ["MUSIC", "VIDEO", "DIRECTION"],
     description: "Visuals that vibe.",
-    // TODO: replace with approved music video asset
-    heroImage: "/projects/aia-na-piya/hero.jpg",
+    heroImage: "/Images/Projects/08-Music Video.webp",
     featured: false,
     archiveOrder: 8,
   },
@@ -173,8 +165,7 @@ export const allProjects: Project[] = [
     category: "INFLUENCER",
     tags: ["INFLUENCER", "SOCIAL", "DIGITAL"],
     description: "New voices. Real impact.",
-    // TODO: replace with approved influencer campaign asset
-    heroImage: "/projects/influencers/hero.jpg",
+    heroImage: "/Images/Projects/09-Influencers.webp",
     featured: false,
     archiveOrder: 9,
   },
@@ -186,8 +177,7 @@ export const allProjects: Project[] = [
     category: "EDUCATION",
     tags: ["CAMPAIGN", "EDUCATION", "STORYTELLING"],
     description: "We made education fun.",
-    // TODO: replace with approved Hebron School asset
-    heroImage: "/projects/hebron/hero.jpg",
+    heroImage: "/Images/Projects/10-Hebron.webp",
     featured: false,
     archiveOrder: 10,
   },
@@ -199,8 +189,7 @@ export const allProjects: Project[] = [
     category: "CAMPAIGNS",
     tags: ["CAMPAIGN", "SOCIAL IMPACT", "EVENT"],
     description: "A movement for change.",
-    // TODO: replace with approved Rakshak asset
-    heroImage: "/projects/rakshak/hero.jpg",
+    heroImage: "/Images/Projects/11-Kcartcaay.webp",
     featured: false,
     archiveOrder: 11,
   },

@@ -77,12 +77,13 @@ export function TapeStrip({
     checker: "bg-white",
   }[variant];
 
-  const checkerBgImage = `
-    linear-gradient(45deg, #000 25%, transparent 25%),
-    linear-gradient(-45deg, #000 25%, transparent 25%),
-    linear-gradient(45deg, transparent 75%, #000 75%),
-    linear-gradient(-45deg, transparent 75%, #000 75%)
-  `;
+  // Upright checker squares (racing-flag / zebra-crossing style), not a
+  // 45°-rotated diamond pattern — see components/graphics/checkerboard.tsx
+  // for the same verified repeating-conic-gradient formula. At this
+  // component's typical checkerSize (~20-34px) the previous diagonal
+  // version read as fine dotted texture rather than a deliberate
+  // material; upright squares hold up as a real checker at any size.
+  const checkerBgImage = `repeating-conic-gradient(#000 0% 25%, transparent 0% 50%)`;
 
   // Text marquee (yellow/white/dark)
   useEffect(() => {
@@ -180,7 +181,6 @@ export function TapeStrip({
                 transform: "translate3d(0,0,0)",
                 backgroundImage: checkerBgImage,
                 backgroundSize: `${checkerSize}px ${checkerSize}px`,
-                backgroundPosition: `0 0, 0 ${checkerSize / 2}px, ${checkerSize / 2}px -${checkerSize / 2}px, -${checkerSize / 2}px 0`,
               }}
             />
           </div>

@@ -69,10 +69,20 @@ function TiltImageFrame({
   cursorState?: "view" | "play" | "drag";
 }) {
   const frameRef = useRef<HTMLDivElement>(null);
+  // Cached on enter, not re-read on every mousemove — getBoundingClientRect()
+  // forces a layout flush, and this same node's transform changes on
+  // every mousemove via the gsap.to below, which is exactly the shape of
+  // a layout-thrashing loop if the rect were re-read each time.
+  const rectRef = useRef<DOMRect | null>(null);
+
+  const handleMouseEnter = () => {
+    if (frameRef.current) rectRef.current = frameRef.current.getBoundingClientRect();
+  };
+
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
     if (prefersReducedMotion() || !frameRef.current) return;
 
-    const rect = frameRef.current.getBoundingClientRect();
+    const rect = rectRef.current ?? frameRef.current.getBoundingClientRect();
     // -0.5 to 0.5 across the frame in each axis
     const px = (e.clientX - rect.left) / rect.width - 0.5;
     const py = (e.clientY - rect.top) / rect.height - 0.5;
@@ -93,6 +103,7 @@ function TiltImageFrame({
   };
 
   const handleMouseLeave = () => {
+    rectRef.current = null;
     if (!frameRef.current) return;
     gsap.to(frameRef.current, {
       rotateX: 0,
@@ -110,6 +121,7 @@ function TiltImageFrame({
     <div
       className="w-full h-full"
       style={{ perspective: "1200px" }}
+      onMouseEnter={handleMouseEnter}
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
       data-cursor={cursorState}
@@ -138,13 +150,28 @@ function TiltImageFrame({
 function FeaturedScene({ project, index, className }: ProjectSceneProps) {
   return (
     <article
-      className={cn("relative w-full h-full flex flex-col md:flex-row md:items-center gap-6 md:gap-10", className)}
+      className={cn(
+        // Mobile: a natural-height, vertically-stacked editorial page —
+        // metadata flows top-to-bottom, media gets its own defined block
+        // at the end (see data-fw-image-wrap below). No h-full/flex-1
+        // anywhere in this mobile path: those only make sense against a
+        // fixed-height ancestor, which mobile deliberately doesn't have
+        // (the horizontal-viewport wrapper is h-auto on mobile — see
+        // FeaturedWorkSection) — that mismatch is what was crushing/
+        // clipping this scene's content on mobile.
+        // Desktop (md+): unchanged — h-full flex-row scene inside the
+        // pinned camera viewport.
+        "relative w-full h-auto md:h-full flex flex-col md:flex-row md:items-center gap-6 md:gap-10 py-6 md:py-0",
+        className
+      )}
       data-scene={project.id}
       aria-label={`Project: ${project.client}`}
     >
-      {/* Left: compact metadata column — a naturally-flowing, vertically
-          centered block (not stretched edge-to-edge with justify-between,
-          which was pinning the CTA to the very bottom of the scene). */}
+      {/* Metadata column — naturally-flowing block (not stretched with
+          justify-between, which was pinning the CTA to the very bottom
+          of the scene). Mobile order: number, title, description, tags,
+          CTA, then media below (see the mobile grid the brief calls
+          for) — desktop keeps its own side-by-side composition. */}
       <div className="relative z-10 flex flex-col md:w-[30%] lg:w-[26%] flex-shrink-0">
         {/* Project number */}
         <div className="flex items-center gap-3 mb-5" data-fw-number>
@@ -170,7 +197,7 @@ function FeaturedScene({ project, index, className }: ProjectSceneProps) {
         </p>
 
         {/* Tags */}
-        <div className="flex flex-wrap gap-2 mb-8" data-fw-tags>
+        <div className="flex flex-wrap gap-2 mb-6 md:mb-8" data-fw-tags>
           {project.tags.map((tag) => (
             <Tag key={tag} label={tag} />
           ))}
@@ -193,20 +220,25 @@ function FeaturedScene({ project, index, className }: ProjectSceneProps) {
         </MagneticButton>
       </div>
 
-      {/* Right: the dominant visual — a "physical media" frame, not a
-          plain rectangle. A hairline border + whisper of rotation + one
-          tape accent reads as a printed/projected image placed into the
-          scene, without overloading it with decoration. The resting tilt
-          (±0.6deg) lives on this static outer wrapper — TiltImageFrame's
-          inner node is fully GSAP-owned (rotateX/rotateY/x/y/scale), so a
-          plain CSS transform on that same node would get overwritten the
-          first time the pointer moves. */}
+      {/* The dominant visual — a "physical media" frame, not a plain
+          rectangle. A hairline border + whisper of rotation + one tape
+          accent reads as a printed/projected image placed into the
+          scene. The resting tilt (±0.6deg) lives on this static outer
+          wrapper — TiltImageFrame's inner node is fully GSAP-owned
+          (rotateX/rotateY/x/y/scale), so a plain CSS transform on that
+          same node would get overwritten the first time the pointer
+          moves.
+          Mobile: a defined height block (not flex-1/h-full, which
+          resolve to nothing against this scene's now-auto height) sized
+          to feel like a major visual anchor without crowding out the
+          metadata above it. Desktop: unchanged flex-1 h-full sizing
+          against the pinned scene's fixed height. */}
       <div
-        className="relative flex-1 h-full min-h-0 flex items-center justify-center"
+        className="relative w-full h-[32svh] min-h-[220px] max-h-[360px] md:flex-1 md:h-full md:w-auto md:min-h-0 md:max-h-none flex items-center justify-center"
         data-fw-image-wrap
       >
         <div
-          className="relative w-full h-[85%] md:h-[88%]"
+          className="relative w-full h-full md:h-[88%]"
           style={{ transform: `rotate(${index % 2 === 0 ? -0.6 : 0.6}deg)` }}
         >
           <TiltImageFrame
@@ -237,6 +269,7 @@ function FeaturedScene({ project, index, className }: ProjectSceneProps) {
                   className="absolute inset-0"
                   fill
                   priority={index === 0}
+                  placeholderLabel={project.number}
                 />
               </div>
 
@@ -319,6 +352,7 @@ function ArchiveScene({ project, className }: ProjectSceneProps) {
             alt={`${project.client} campaign visual`}
             fill
             className="transition-transform duration-500 ease-out group-hover:scale-[1.04]"
+            placeholderLabel={project.number}
           />
         </div>
       </div>

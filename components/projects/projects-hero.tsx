@@ -1,3 +1,4 @@
+"use client";
 // components/projects/projects-hero.tsx
 // "ALL THE KCATCH." hero section for Projects page.
 // References: Projects.png
@@ -6,6 +7,7 @@ import { Sticker } from "@/components/graphics/sticker";
 import { TapeStack } from "@/components/graphics/tape-stack";
 import { HandwrittenNote } from "@/components/graphics/handwritten-note";
 import { Reveal } from "@/components/motion/reveal";
+import { MaskText } from "@/components/motion/mask-text";
 import { Container } from "@/components/layout/container";
 
 export function ProjectsHero() {
@@ -42,16 +44,13 @@ export function ProjectsHero() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-end">
           {/* Left: headline */}
           <div>
-            <Reveal direction="up">
-              <h1
-                className="font-display text-kc-yellow uppercase leading-none"
-                style={{ fontSize: "clamp(4rem, 11vw, 10rem)" }}
-              >
-                <span className="block">ALL</span>
-                <span className="block">THE</span>
-                <span className="block">KCATCH.</span>
-              </h1>
-            </Reveal>
+            <MaskText
+              as="h1"
+              className="font-display text-kc-yellow uppercase leading-none"
+              style={{ fontSize: "clamp(4rem, 11vw, 10rem)" }}
+              lines={["ALL", "THE", "KCATCH."]}
+              stagger={0.08}
+            />
 
             <Reveal direction="up" delay={0.15}>
               <p className="font-body text-kc-muted text-sm md:text-base leading-relaxed mt-4 max-w-md uppercase tracking-wide">

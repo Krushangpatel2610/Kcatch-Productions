@@ -23,6 +23,8 @@ type PaperSectionProps = {
   tone?: PaperTone;
   /** Render only the top edge, only the bottom, or both (default) */
   edges?: "top" | "bottom" | "both";
+  /** Give the paper edges their own subtle scroll drift (see TornPaperEdge) */
+  parallax?: boolean;
   className?: string;
   sectionClassName?: string;
   "aria-label"?: string;
@@ -38,6 +40,7 @@ export function PaperSection({
   children,
   tone = "paper",
   edges = "both",
+  parallax = false,
   className,
   sectionClassName,
   ...aria
@@ -45,7 +48,7 @@ export function PaperSection({
   return (
     <div className={cn("relative", className)}>
       {(edges === "top" || edges === "both") && (
-        <TornPaperEdge className="relative z-[1] -mb-px" />
+        <TornPaperEdge className="relative z-[1] -mb-px" parallax={parallax} />
       )}
 
       <section
@@ -64,7 +67,7 @@ export function PaperSection({
       </section>
 
       {(edges === "bottom" || edges === "both") && (
-        <TornPaperEdge variant="bottom" className="relative z-[1] -mt-px" />
+        <TornPaperEdge variant="bottom" className="relative z-[1] -mt-px" parallax={parallax} />
       )}
     </div>
   );

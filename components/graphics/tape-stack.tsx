@@ -33,13 +33,19 @@ export function TapeStack({
       aria-hidden="true"
     >
       {/* Back layer: checker tape — offset up, opposite angle, peeks out
-          above/below the yellow tape rather than sitting flush with it. */}
+          above/below the yellow tape rather than sitting flush with it.
+          checkerSize is scaled up from the default (22px) specifically
+          because only a thin sliver of this strip's own height is ever
+          visible beyond the yellow tape's edge — at the small default
+          cell size that sliver read as fine dot/noise texture rather
+          than a deliberate racing-checker material. */}
       <TapeStrip
         text={text}
         variant="checker"
         direction={checkerDirection}
         rotation={-1.75}
         offsetY={-10}
+        checkerSize={34}
         className="z-10"
       />
 

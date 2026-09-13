@@ -33,21 +33,34 @@ function isTouchDevice() {
   return window.matchMedia("(pointer: coarse)").matches;
 }
 
-function shouldEnableCursor(): boolean {
-  if (typeof window === "undefined") return false; // SSR: always off
-  return !isTouchDevice() && !prefersReducedMotion();
-}
-
 export function CustomCursor() {
-  // Lazy initializer (not an effect + setState) — runs once, synchronously,
-  // on the client's first render. Server always renders null (see the
-  // typeof window guard above), so there's no hydration mismatch and no
-  // cascading-render lint complaint from setting state inside an effect.
-  const [enabled] = useState(shouldEnableCursor);
+  // Starts false on every environment — SSR, and the client's hydration
+  // render too. A lazy useState initializer runs during the client's
+  // FIRST render, which for a client component IS the hydration render:
+  // `typeof window === "undefined"` is already false at that point (this
+  // code is executing in the browser), so reading matchMedia/reduced-
+  // motion there produced real values immediately and made the very
+  // first client render diverge from the window-less server render —
+  // an actual hydration mismatch, not a false alarm. The fix is the
+  // standard "decide after mount" gate: render nothing on both the
+  // server AND the client's first paint, then flip to the real value in
+  // an effect (which only runs post-hydration) and re-render.
+  const [enabled, setEnabled] = useState(false);
   const [cursorState, setCursorState] = useState<CursorState>("default");
   const dotRef = useRef<HTMLDivElement>(null);
   const quickX = useRef<gsap.QuickToFunc | null>(null);
   const quickY = useRef<gsap.QuickToFunc | null>(null);
+
+  useEffect(() => {
+    // Reading a real browser API (matchMedia) to decide whether this
+    // component renders anything — exactly the "subscribe to an
+    // external system, then setState" case the lint rule's own
+    // rationale describes as fine; the alternative (a lazy useState
+    // initializer) reads that same API during hydration itself and
+    // causes a genuine mismatch, which is strictly worse.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setEnabled(!isTouchDevice() && !prefersReducedMotion());
+  }, []);
 
   useEffect(() => {
     if (!enabled || !dotRef.current) return;
@@ -61,20 +74,46 @@ export function CustomCursor() {
       ease: "power3.out",
     });
 
-    const handleMove = (e: MouseEvent) => {
-      quickX.current?.(e.clientX);
-      quickY.current?.(e.clientY);
+    // mousemove can fire at 60-120+Hz. Position updates (quickTo) are
+    // cheap either way, but el.closest("[data-cursor]") walks up the DOM
+    // from the hovered element on every single call — real, continuous
+    // work that doesn't need to run at mousemove's native rate, since
+    // "am I over a different data-cursor zone" only actually changes a
+    // tiny fraction of those events. Splitting the two: position updates
+    // every event (cheap), the DOM-walk/state-check throttled to one
+    // rAF per frame (cheap regardless of how many mousemove events
+    // landed in that frame) removes a real per-event cost that was
+    // running continuously on every page, all the time — not just
+    // during the preloader window, but a standing contributor to
+    // "everything feels laggy."
+    let pendingX = 0;
+    let pendingY = 0;
+    let rafId: number | null = null;
 
-      // Walk up from the exact hovered element to find the nearest
-      // data-cursor state — lets nested elements (e.g. text inside a
-      // project image) still report the parent's intended state.
-      const target = (e.target as HTMLElement)?.closest<HTMLElement>("[data-cursor]");
+    const checkCursorZone = () => {
+      rafId = null;
+      const el = document.elementFromPoint(pendingX, pendingY) as HTMLElement | null;
+      const target = el?.closest<HTMLElement>("[data-cursor]");
       const next = (target?.dataset.cursor as CursorState) || "default";
       setCursorState((prev) => (prev === next ? prev : next));
     };
 
+    const handleMove = (e: MouseEvent) => {
+      quickX.current?.(e.clientX);
+      quickY.current?.(e.clientY);
+
+      pendingX = e.clientX;
+      pendingY = e.clientY;
+      if (rafId === null) {
+        rafId = requestAnimationFrame(checkCursorZone);
+      }
+    };
+
     window.addEventListener("mousemove", handleMove, { passive: true });
-    return () => window.removeEventListener("mousemove", handleMove);
+    return () => {
+      window.removeEventListener("mousemove", handleMove);
+      if (rafId !== null) cancelAnimationFrame(rafId);
+    };
   }, [enabled]);
 
   if (!enabled) return null;

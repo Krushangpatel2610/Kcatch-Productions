@@ -4,19 +4,29 @@
 import Link from "next/link";
 import { NAV_LINKS, FOOTER, SOCIAL_LINKS } from "@/content/site";
 import { SocialIcon } from "@/components/ui/social-icon";
-import { Checkerboard } from "@/components/graphics/checkerboard";
 import { Container } from "@/components/layout/container";
 
 export function Footer() {
   return (
-    <footer className="bg-kc-black border-t border-kc-line" role="contentinfo">
-      {/* Checkerboard divider */}
-      <Checkerboard
-        height="xs"
-        density="tight"
-        colorA="#ffffff"
-        colorB="#000000"
-      />
+    <footer className="bg-kc-black" role="contentinfo">
+      {/* Editorial divider — replaces a thin fine-grain checker strip
+          that, at the sliver of height it actually occupied here, read
+          as dotted noise rather than a deliberate material detail. A
+          hairline rule with one small centered checker "production
+          mark" interruption reads as a print-production detail instead
+          — secondary to the yellow tape above it, not competing with it. */}
+      <div className="relative h-px bg-kc-line" aria-hidden="true">
+        <div
+          className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-10 h-2.5"
+          style={{
+            // Upright checker squares — same verified formula as
+            // components/graphics/checkerboard.tsx, not the diagonal
+            // diamond pattern this used before.
+            backgroundImage: "repeating-conic-gradient(#fff000 0% 25%, #000 0% 50%)",
+            backgroundSize: "5px 5px",
+          }}
+        />
+      </div>
 
       <Container className="py-10 md:py-14">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-10 md:gap-6">

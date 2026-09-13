@@ -1,3 +1,4 @@
+"use client";
 // components/contact/contact-hero.tsx
 // "LET'S MAKE THEM LOOK." contact hero.
 // References: Contact.png
@@ -7,7 +8,15 @@ import { TapeStack } from "@/components/graphics/tape-stack";
 import { HandwrittenNote } from "@/components/graphics/handwritten-note";
 import { Sticker } from "@/components/graphics/sticker";
 import { Reveal } from "@/components/motion/reveal";
+import { MaskText } from "@/components/motion/mask-text";
 import { Container } from "@/components/layout/container";
+
+const HEADLINE_LINES = [
+  CONTACT_HERO.headline1,
+  CONTACT_HERO.headline2,
+  CONTACT_HERO.headline3,
+  CONTACT_HERO.headline4,
+].filter((line): line is string => Boolean(line));
 
 export function ContactHero() {
   return (
@@ -47,16 +56,14 @@ export function ContactHero() {
               <p className="font-body text-xs uppercase tracking-widest text-kc-muted mb-4">
                 {CONTACT_HERO.eyebrow}
               </p>
-              <h1
-                className="font-display text-kc-yellow uppercase leading-[0.85] tracking-tight"
-                style={{ fontSize: "clamp(4rem, 10vw, 11rem)" }}
-              >
-                <span className="block">{CONTACT_HERO.headline1}</span>
-                <span className="block">{CONTACT_HERO.headline2}</span>
-                <span className="block">{CONTACT_HERO.headline3}</span>
-                <span className="block">{CONTACT_HERO.headline4 ?? ""}</span>
-              </h1>
             </Reveal>
+            <MaskText
+              as="h1"
+              className="font-display text-kc-yellow uppercase leading-[0.85] tracking-tight"
+              style={{ fontSize: "clamp(4rem, 10vw, 11rem)" }}
+              lines={HEADLINE_LINES}
+              stagger={0.07}
+            />
 
             <Reveal direction="up" delay={0.15}>
               <div className="mt-6">

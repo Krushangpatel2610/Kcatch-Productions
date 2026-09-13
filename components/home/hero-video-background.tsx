@@ -24,13 +24,24 @@ import { prefersReducedMotion } from "@/lib/motion/reduced-motion";
 // Set this once a real hero video is approved and added to /public.
 // Leave null to keep the current static-image hero exactly as-is.
 const HERO_VIDEO_SRC: string | null = null;
-const FALLBACK_IMAGE_SRC = "/Images/BG Images/LandingPageBg.png";
+// .webp, not the original .png: the source PNG was 1.87MB for a
+// 1672x941 photo — PNG is the wrong codec for a photograph (lossless,
+// so it can't exploit the redundancy a photo actually has). Re-encoded
+// at quality 82 the same image is 118KB, a ~16x reduction with no
+// visible quality loss, and it's this exact asset that's `priority`
+// (LCP-critical, decoded eagerly) at the same moment the preloader's
+// own GSAP timeline is running its first frames — the 1.87MB version
+// was very likely a real, direct contributor to the reported preloader
+// lag/glitch, not just a general page-weight concern.
+const FALLBACK_IMAGE_SRC = "/Images/BG Images/LandingPageBg.webp";
 
 type HeroVideoBackgroundProps = {
   sectionRef: React.RefObject<HTMLElement | null>;
+  /** Called once the actual background image has decoded and painted. */
+  onImageReady?: () => void;
 };
 
-export function HeroVideoBackground({ sectionRef }: HeroVideoBackgroundProps) {
+export function HeroVideoBackground({ sectionRef, onImageReady }: HeroVideoBackgroundProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [videoReady, setVideoReady] = useState(false);
 
@@ -72,16 +83,18 @@ export function HeroVideoBackground({ sectionRef }: HeroVideoBackgroundProps) {
 
   if (!HERO_VIDEO_SRC) {
     // No approved video yet — the existing static image treatment,
-    // unchanged, including its own GSAP scale-settle (data-reveal-bg is
-    // wired up by HeroSection's own timeline).
+    // unchanged. The scale-settle entrance animates the wrapper div
+    // HeroSection renders around this component (bgRef, a direct ref —
+    // see hero-section.tsx), not this Image itself, so no data-attribute
+    // hook is needed here.
     return (
       <Image
         src={FALLBACK_IMAGE_SRC}
         alt="KCATCH Hero Background"
         fill
         priority
+        sizes="100vw"
         className="object-cover object-center"
-        data-reveal-bg
       />
     );
   }
