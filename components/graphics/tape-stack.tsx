@@ -29,7 +29,7 @@ export function TapeStack({
   return (
     <div
       className={cn("relative w-full overflow-x-clip", className)}
-      style={{ height: "clamp(64px, 8.5vw, 108px)" }}
+      style={{ height: "clamp(80px, 10vw, 128px)" }}
       aria-hidden="true"
     >
       {/* Back layer: checker tape — offset up, opposite angle, peeks out

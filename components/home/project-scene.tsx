@@ -268,7 +268,8 @@ function FeaturedScene({ project, index, className }: ProjectSceneProps) {
                   alt={`${project.client} campaign visual`}
                   className="absolute inset-0"
                   fill
-                  priority={index === 0}
+                  priority={index < 2}
+                  sizes="(min-width: 1024px) 60vw, 100vw"
                   placeholderLabel={project.number}
                 />
               </div>
