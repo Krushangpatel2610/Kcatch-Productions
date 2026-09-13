@@ -8,6 +8,19 @@
 //   - Mobile: no pinning — the track is a native overflow-x-auto
 //     scroll-snap carousel, tracked via a scroll listener instead of
 //     ScrollTrigger.
+//
+// SCROLL PROGRESS IS THE SINGLE SOURCE OF TRUTH.
+// Every per-project visual state (scale, opacity, text position) is
+// derived directly from the scrubbed ScrollTrigger's progress on every
+// tick via gsap.set() — never from a separate fromTo()/timeline that
+// plays on mount or on an activeIndex state change. That event-based
+// approach (an earlier version of this file) fights the scrub: it
+// restarts from a fixed "from" state regardless of where the user
+// actually is in the scroll, which desyncs on fast scroll, scrolling
+// backward, or jumping between projects, and made Project 01 render
+// partway through its own entrance animation instead of already-settled
+// on first paint. There is exactly one calculation path now: scroll
+// progress -> each project's own normalized progress -> gsap.set().
 
 import { useState, useRef, useEffect } from "react";
 import gsap from "gsap";
@@ -18,49 +31,148 @@ if (typeof window !== "undefined") {
   gsap.registerPlugin(ScrollTrigger, useGSAP);
 }
 import { ArrowLeft, ArrowRight } from "lucide-react";
-import { cn } from "@/lib/utils";
 import { featuredProjects } from "@/content/projects";
 import { FEATURED_WORK } from "@/content/site";
 import { ProjectScene } from "./project-scene";
 import { ScrollProgress } from "@/components/motion/scroll-progress";
+import { OrbitalIndicator } from "@/components/motion/orbital-indicator";
 import { HandwrittenNote } from "@/components/graphics/handwritten-note";
 import { Container } from "@/components/layout/container";
+import { prefersReducedMotion } from "@/lib/motion/reduced-motion";
+import { buildMaskClipPath } from "@/lib/motion/mask-reveal";
+
+// Maps a value from one range to another, clamped to [0,1] output.
+function mapRange(value: number, inMin: number, inMax: number): number {
+  if (inMax === inMin) return value >= inMax ? 1 : 0;
+  const t = (value - inMin) / (inMax - inMin);
+  return Math.max(0, Math.min(1, t));
+}
 
 export function FeaturedWorkSection() {
   const [activeIndex, setActiveIndex] = useState(0);
   const total = featuredProjects.length;
-  
+
   const sectionRef = useRef<HTMLElement>(null);
   const trackRef = useRef<HTMLDivElement>(null);
+  const sceneRefs = useRef<(HTMLElement | null)[]>([]);
 
   useGSAP(() => {
     if (!sectionRef.current || !trackRef.current) return;
-    
+
     const isMobile = window.matchMedia("(max-width: 768px)").matches;
     if (isMobile) return;
 
+    const reduced = prefersReducedMotion();
     const track = trackRef.current;
     const getScrollAmount = () => track.scrollWidth - window.innerWidth;
-    
+
     const tween = gsap.to(track, {
       x: () => -getScrollAmount(),
-      ease: "none"
+      ease: "none",
     });
+
+    // Each project gets an equal "active window" along the 0-1 global
+    // progress. Project i's own progress reaches 1 (fully settled) at
+    // the center of its window and fades toward 0 at the edges — this
+    // is the projectProgress = mapRange(...) model, evaluated fresh on
+    // every scrub tick rather than played once as an independent timeline.
+    const applySceneState = (globalProgress: number) => {
+      const step = 1 / total;
+      sceneRefs.current.forEach((scene, i) => {
+        if (!scene) return;
+
+        const center = i * step + step / 2;
+        // Distance from this project's center, normalized so 0 = fully
+        // active, 1 = one full window away (fully settled neighbor state).
+        const distance = Math.abs(globalProgress - center) / step;
+        const settleAmount = 1 - mapRange(distance, 0, 1); // 1 at center, 0 one window away
+
+        const mask = scene.querySelector<HTMLElement>("[data-fw-mask]");
+
+        if (reduced) {
+          gsap.set(scene, { opacity: 1 });
+          const imageWrap = scene.querySelector("[data-fw-image-wrap]");
+          if (imageWrap) gsap.set(imageWrap, { opacity: 1, scale: 1, x: 0 });
+          const photo = scene.querySelector("[data-fw-photo]");
+          if (photo) gsap.set(photo, { scale: 1, x: 0, y: 0 });
+          if (mask) mask.style.clipPath = buildMaskClipPath(1);
+          return;
+        }
+
+        // Scene-level dominance: current scene reads at full strength,
+        // neighbors recede but never fully vanish (keeps the "next
+        // project" glimpse and the "previous project stays present"
+        // feel from the brief) — never below a readable floor.
+        const sceneOpacity = 0.28 + settleAmount * 0.72;
+        gsap.set(scene, { opacity: sceneOpacity });
+
+        const imageWrap = scene.querySelector("[data-fw-image-wrap]");
+        if (imageWrap) {
+          gsap.set(imageWrap, {
+            scale: 0.94 + settleAmount * 0.06,
+            x: (1 - settleAmount) * (globalProgress < center ? 24 : -24),
+          });
+        }
+
+        // Mask reveal: its own dedicated node (see project-scene.tsx),
+        // driven by the same settleAmount so it opens/closes in lockstep
+        // with everything else — set via plain style.clipPath rather
+        // than gsap.set, since clip-path polygons aren't one of GSAP's
+        // optimized CSS properties and a direct style write is cheaper
+        // here than routing it through GSAP's property-parsing. The clip
+        // path's own internal pacing (see buildMaskClipPath) gives the
+        // crack -> major reveal -> settle rhythm, not linear settleAmount.
+        if (mask) mask.style.clipPath = buildMaskClipPath(settleAmount);
+
+        // Photo travel: the image itself drifts in and settles as the
+        // crop opens — same settleAmount input as the mask so the two
+        // stay perfectly in lockstep at every scroll tick (forward,
+        // reverse, jump, or stopped mid-scroll), just reading as "the
+        // photograph sliding into place" rather than a static image
+        // sitting behind a moving crop.
+        const photo = scene.querySelector("[data-fw-photo]");
+        if (photo) {
+          gsap.set(photo, {
+            scale: 1.08 - settleAmount * 0.08,
+            x: (1 - settleAmount) * 18,
+            y: (1 - settleAmount) * -10,
+          });
+        }
+
+        const textEls = scene.querySelectorAll(
+          "[data-fw-number], [data-fw-title], [data-fw-desc], [data-fw-tags] > *, [data-fw-cta]"
+        );
+        gsap.set(textEls, {
+          opacity: settleAmount,
+          y: (1 - settleAmount) * 14,
+        });
+      });
+    };
+
+    // Prime the first frame before any scroll happens so Project 01
+    // renders already-settled, not mid-entrance.
+    applySceneState(0);
 
     ScrollTrigger.create({
       trigger: sectionRef.current,
-      start: "center center",
+      // "top top": the pin engages exactly when the section's own top
+      // reaches the viewport top, so Project 01's frame is composed
+      // cleanly inside the viewport from the first moment of the pin —
+      // not partway through, which is what "center center" produced
+      // (the section — and therefore project 01 — was already
+      // half-scrolled-past by the time the pin actually engaged).
+      start: "top top",
       end: () => `+=${getScrollAmount()}`,
       pin: true,
       animation: tween,
       scrub: 1,
       invalidateOnRefresh: true,
       onUpdate: (self) => {
+        applySceneState(self.progress);
         const index = Math.round(self.progress * (total - 1));
         setActiveIndex(index);
-      }
+      },
     });
-
   }, { scope: sectionRef });
 
   // Mobile: the track is a native scroll-snap carousel, so track the
@@ -118,8 +230,29 @@ export function FeaturedWorkSection() {
       aria-label="Featured Work"
       data-section="featured-work"
     >
+      {/* Seam — reads as this section physically sliding up over the Hero
+          beneath it (both share bg-kc-black, so a color-based torn edge
+          would be invisible; a soft shadow + thin yellow rule stands in
+          as the physical edge instead). */}
+      <div
+        className="absolute top-0 left-0 right-0 h-10 md:h-14 -translate-y-full pointer-events-none"
+        style={{
+          background: "linear-gradient(to top, rgba(0,0,0,0.55), transparent)",
+        }}
+        aria-hidden="true"
+      />
+      <div className="absolute top-0 left-0 right-0 h-[2px] bg-kc-yellow/70" aria-hidden="true" />
+
       {/* ── Section header ── */}
-      <Container className="pt-16 md:pt-20 pb-8">
+      {/* Top padding matches (and slightly exceeds) the fixed nav's own
+          height at each breakpoint (h-16 / md:h-[80px] / lg:h-[96px]) so
+          the section label never sits underneath/behind the nav once this
+          section is pinned to the top of the viewport. Kept tight (not
+          more than needed) because this whole section gets pinned to
+          exactly one viewport height — every extra px here is a px the
+          horizontal scene viewport doesn't get, which is what was
+          pushing the CTA/progress bar past the bottom of the screen. */}
+      <Container className="pt-20 md:pt-24 lg:pt-28 pb-4 md:pb-6">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
           {/* Left: label + headline */}
           <div className="lg:col-span-1">
@@ -185,25 +318,35 @@ export function FeaturedWorkSection() {
         data-horizontal-track   → the element that gets translateX
         Each ProjectScene is data-scene="<id>"
       */}
+      {/* Height is svh-relative (not a fixed px max) specifically so the
+          header + this viewport + the progress bar below always fit
+          inside one pinned viewport height without the bottom of the
+          scene (CTA, progress dots) getting pushed past the visible
+          screen on shorter/laptop viewports. */}
       <div
         className="relative overflow-visible"
         data-horizontal-section
-        style={{ height: "70vh" }}
+        data-cursor="drag"
+        style={{ height: "clamp(360px, 48svh, 520px)" }}
       >
         {/* Horizontal track — GSAP applies translateX on desktop.
-            On mobile it's a native overflow-x-auto snap carousel instead. */}
+            On mobile it's a native overflow-x-auto snap carousel instead.
+            pl-6/md:pl-10 matches Container's own gutter so Project 01's
+            metadata aligns with the section header above it instead of
+            starting flush against the browser edge; pr matches on the
+            trailing side so the last scene gets the same breathing room. */}
         <div
           ref={trackRef}
-          className="flex h-full w-max md:overflow-visible overflow-x-auto snap-x snap-mandatory md:snap-none scrollbar-none"
+          className="flex h-full w-max md:overflow-visible overflow-x-auto snap-x snap-mandatory md:snap-none scrollbar-none pl-6 md:pl-10 pr-6 md:pr-10"
           data-horizontal-track
         >
           {featuredProjects.map((project, i) => (
             <div
               key={project.id}
-              className={cn(
-                "h-full flex-shrink-0 snap-center transition-opacity duration-500 w-[90vw] md:w-[88vw] lg:w-[82vw] flex items-center justify-center pr-4 md:pr-8",
-                i === activeIndex ? "opacity-100" : "opacity-30 md:opacity-40"
-              )}
+              ref={(el) => {
+                sceneRefs.current[i] = el;
+              }}
+              className="h-full flex-shrink-0 w-[90vw] md:w-[88vw] lg:w-[82vw] flex items-center justify-center pr-4 md:pr-8 snap-center"
             >
               <ProjectScene
                 project={project}
@@ -233,12 +376,16 @@ export function FeaturedWorkSection() {
       </div>
 
       {/* ── Progress indicator ── */}
-      <Container className="py-6">
+      {/* Orbital node ring sits alongside the linear bar as a secondary,
+          decorative confirmation of the same state (RocketAir-inspired,
+          kept intentionally small/subtle) — not a replacement for it. */}
+      <Container className="pt-4 pb-6 md:pb-8 flex items-center gap-4">
         <ScrollProgress
           current={activeIndex + 1}
           total={total}
-          className="max-w-sm"
+          className="max-w-sm flex-1"
         />
+        <OrbitalIndicator current={activeIndex + 1} total={total} />
       </Container>
     </section>
   );

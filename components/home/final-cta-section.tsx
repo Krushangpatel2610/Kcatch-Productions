@@ -5,11 +5,12 @@
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { FINAL_CTA } from "@/content/site";
-import { KcatchTape } from "@/components/graphics/kcatch-tape";
+import { TapeStack } from "@/components/graphics/tape-stack";
 import { Sticker } from "@/components/graphics/sticker";
 import { Reveal } from "@/components/motion/reveal";
 import { Checkerboard } from "@/components/graphics/checkerboard";
 import { Container } from "@/components/layout/container";
+import { MagneticButton } from "@/components/motion/magnetic-button";
 
 export function FinalCTASection() {
   return (
@@ -28,7 +29,7 @@ export function FinalCTASection() {
             <Reveal direction="up">
               <h2
                 className="font-display text-kc-yellow uppercase leading-none"
-                style={{ fontSize: "clamp(3.5rem, 10vw, 9rem)" }}
+                style={{ fontSize: "clamp(2.35rem, 10vw, 9rem)" }}
               >
                 <span className="block">{FINAL_CTA.headline1}</span>
                 <span className="block">{FINAL_CTA.headline2}</span>
@@ -36,17 +37,19 @@ export function FinalCTASection() {
             </Reveal>
 
             <Reveal direction="up" delay={0.15}>
-              <Link
-                href={FINAL_CTA.cta.href}
-                className="inline-flex items-center gap-3 bg-kc-yellow text-kc-black font-body text-sm uppercase tracking-widest px-8 py-4 mt-10 hover:bg-transparent hover:text-kc-yellow hover:border-kc-yellow border border-kc-yellow transition-all duration-300 focus-visible:outline-kc-yellow group"
-              >
-                {FINAL_CTA.cta.label}
-                <ArrowRight
-                  size={16}
-                  aria-hidden="true"
-                  className="transition-transform group-hover:translate-x-1"
-                />
-              </Link>
+              <MagneticButton>
+                <Link
+                  href={FINAL_CTA.cta.href}
+                  className="inline-flex items-center gap-3 bg-kc-yellow text-kc-black font-body text-sm uppercase tracking-widest px-8 py-4 mt-10 hover:bg-transparent hover:text-kc-yellow hover:border-kc-yellow border border-kc-yellow transition-all duration-300 focus-visible:outline-kc-yellow group"
+                >
+                  {FINAL_CTA.cta.label}
+                  <ArrowRight
+                    size={16}
+                    aria-hidden="true"
+                    className="transition-transform group-hover:translate-x-1"
+                  />
+                </Link>
+              </MagneticButton>
             </Reveal>
           </div>
 
@@ -62,10 +65,9 @@ export function FinalCTASection() {
               ))}
             </div>
 
-            {/* TODO: sticker slot — KCATCH astronaut/character */}
             <Sticker
-              alt="KCATCH astronaut character"
-              placeholder="ASTRONAUT\nSTICKER"
+              src="/Images/PNGs/Loudspeaker.png"
+              alt="KCATCH making noise graphic"
               width={160}
               height={160}
               rotation={5}
@@ -75,13 +77,8 @@ export function FinalCTASection() {
         </div>
       </Container>
 
-      {/* Bottom yellow tape */}
-      <KcatchTape
-        text="LET'S MAKE THEM LOOK"
-        marquee
-        variant="yellow"
-        rotation={0}
-      />
+      {/* Bottom tape stack — transition into the footer */}
+      <TapeStack text="LET'S MAKE THEM LOOK" />
     </section>
   );
 }

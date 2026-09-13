@@ -14,14 +14,13 @@ type KcatchImageProps = {
   sizes?: string;
   quality?: number;
   objectPosition?: string;
-  // A subtle text label to display on the placeholder
-  placeholderLabel?: string;
 };
 
 /**
  * Reusable image component that handles missing assets gracefully.
  * If the image exists in public/, it renders Next.js Image.
- * If not, it renders a deliberate KCATCH aesthetic placeholder.
+ * If not, it renders a silent KCATCH-styled placeholder — never a visible
+ * development label (client name, "SUPPORTING", etc.) in the rendered UI.
  */
 export function KcatchImage({
   src,
@@ -34,7 +33,6 @@ export function KcatchImage({
   sizes,
   quality,
   objectPosition,
-  placeholderLabel,
 }: KcatchImageProps) {
   // Check if the asset actually exists in the public directory
   const imageExists = assetManifest.has(src);
@@ -56,23 +54,23 @@ export function KcatchImage({
     );
   }
 
-  // Fallback state
+  // Fallback state — an intentional, visually-present placeholder (never
+  // near-invisible). A flat 10%-opacity black used to read as blank empty
+  // space on a dark section background (that's exactly what was showing
+  // up as unexplained empty area in the Contact polaroids) — a light
+  // textured surface with a visible icon reads clearly as "an image slot"
+  // on both dark and light section backgrounds.
   return (
     <div
       className={cn(
-        "bg-kc-black/10 flex flex-col items-center justify-center overflow-hidden border border-kc-black/10",
+        "bg-kc-paper/90 flex items-center justify-center overflow-hidden border border-kc-black/15",
         fill && "absolute inset-0 w-full h-full",
         className
       )}
       style={!fill ? { width, height } : undefined}
       aria-label={`Placeholder for: ${alt}`}
     >
-      <div className="flex flex-col items-center gap-2 opacity-30">
-        <Camera size={24} aria-hidden="true" />
-        <span className="font-display text-xs uppercase tracking-widest text-center px-4">
-          {placeholderLabel || alt || "Asset pending"}
-        </span>
-      </div>
+      <Camera size={24} className="text-kc-black/30" aria-hidden="true" />
     </div>
   );
 }

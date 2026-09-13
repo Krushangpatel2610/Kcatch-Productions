@@ -9,7 +9,7 @@ import { ContactForm } from "@/components/contact/contact-form";
 import { OfficeList } from "@/components/contact/office-list";
 import { ContactCTA } from "@/components/contact/contact-cta";
 import { CONTACT_FORM } from "@/content/contact";
-import { TornSection } from "@/components/graphics/torn-section";
+import { PaperSection } from "@/components/graphics/paper-section";
 import { Reveal } from "@/components/motion/reveal";
 import { Container } from "@/components/layout/container";
 
@@ -26,9 +26,7 @@ export default function ContactPage() {
       <ContactHero />
 
       {/* 2. Form + offices (paper section) */}
-      <TornSection variant="dark-to-paper" position="top" />
-      <section
-        className="bg-kc-paper"
+      <PaperSection
         aria-label="Contact form and office details"
         data-section="contact-body"
       >
@@ -50,8 +48,7 @@ export default function ContactPage() {
             </div>
           </div>
         </Container>
-      </section>
-      <TornSection variant="paper-to-dark" position="bottom" />
+      </PaperSection>
 
       {/* 3. Closing CTA */}
       <ContactCTA />

@@ -6,7 +6,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Menu } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { NAV_LINKS, NAV_CTA } from "@/content/site";
@@ -15,6 +15,19 @@ import { MobileMenu } from "./mobile-menu";
 export function Navigation() {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+
+  // The nav is fixed for the whole page, but its "over a dark hero" gradient
+  // fades to transparent at the bottom — once the user scrolls past the
+  // hero, content underneath (e.g. office cards, light paper sections)
+  // would otherwise bleed through the nav text. Solidify the nav once
+  // scrolled so it always stays legible.
+  useEffect(() => {
+    const handleScroll = () => setScrolled(window.scrollY > 40);
+    handleScroll();
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   return (
     <>
@@ -22,13 +35,21 @@ export function Navigation() {
         className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 md:px-10 h-16 md:h-[80px] lg:h-[96px] transition-all duration-300"
         role="banner"
       >
-        {/* Subtle gradient overlay so nav is readable over hero */}
+        {/* Gradient overlay when at the top of a dark hero; solid once scrolled
+            so nav text never collides with content underneath. */}
         <div
-          className="absolute inset-0 -z-10 pointer-events-none"
-          style={{
-            background:
-              "linear-gradient(to bottom, rgba(5,7,11,0.9) 0%, rgba(5,7,11,0.4) 50%, transparent 100%)",
-          }}
+          className={cn(
+            "absolute inset-0 -z-10 pointer-events-none transition-opacity duration-300",
+            scrolled ? "bg-kc-black opacity-95" : "opacity-100"
+          )}
+          style={
+            scrolled
+              ? undefined
+              : {
+                  background:
+                    "linear-gradient(to bottom, rgba(5,7,11,0.9) 0%, rgba(5,7,11,0.4) 50%, transparent 100%)",
+                }
+          }
           aria-hidden="true"
         />
 

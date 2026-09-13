@@ -3,7 +3,7 @@
 // References: Contact.png
 
 import { CONTACT_HERO } from "@/content/contact";
-import { KcatchTape } from "@/components/graphics/kcatch-tape";
+import { TapeStack } from "@/components/graphics/tape-stack";
 import { HandwrittenNote } from "@/components/graphics/handwritten-note";
 import { Sticker } from "@/components/graphics/sticker";
 import { Reveal } from "@/components/motion/reveal";
@@ -71,13 +71,12 @@ export function ContactHero() {
           </div>
 
           {/* Right: annotations + sticker */}
-          <div className="hidden lg:flex flex-col items-end gap-8 pb-8 relative z-10">
+          <div className="hidden lg:flex flex-col items-end gap-5 relative z-10">
             <HandwrittenNote
               text={CONTACT_HERO.annotation1}
               size="md"
               color="white"
               rotation={-4}
-              className="mb-4"
             />
             <div
               className="bg-kc-white text-kc-black font-display text-2xl uppercase px-8 py-4 transform rotate-[2deg] shadow-xl"
@@ -85,20 +84,18 @@ export function ContactHero() {
             >
               {CONTACT_HERO.annotation2}
             </div>
-            <div
-              className="border border-kc-yellow text-kc-yellow font-display text-xl tracking-widest uppercase px-6 py-2 mt-2"
-              aria-hidden="true"
-            >
-              KCATCH
-            </div>
-            
-            {/* TODO: sticker slot — KCATCH hand/rock-on gesture */}
-            <div className="relative mt-8 mr-12">
+            <div className="flex items-center gap-6 mr-4">
+              <div
+                className="border border-kc-yellow text-kc-yellow font-display text-xl tracking-widest uppercase px-6 py-2"
+                aria-hidden="true"
+              >
+                KCATCH
+              </div>
               <Sticker
+                src="/Images/PNGs/Finger image tilt right.png"
                 alt="KCATCH hand gesture sticker"
-                placeholder="HAND\nSTICKER"
-                width={140}
-                height={140}
+                width={100}
+                height={100}
                 rotation={-8}
               />
             </div>
@@ -106,13 +103,8 @@ export function ContactHero() {
         </div>
       </Container>
 
-      {/* Tape + checker strip */}
-      <KcatchTape
-        text="KCATCH THE EYE"
-        marquee
-        variant="yellow"
-        rotation={0}
-      />
+      {/* Tape stack transition into the paper section below */}
+      <TapeStack text="KCATCH THE EYE" />
     </section>
   );
 }

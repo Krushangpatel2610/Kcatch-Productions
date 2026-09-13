@@ -18,15 +18,16 @@
 import Link from "next/link";
 import { Play } from "lucide-react";
 import { HOME_HERO } from "@/content/site";
-import { KcatchTape } from "@/components/graphics/kcatch-tape";
+import { TapeStack } from "@/components/graphics/tape-stack";
 import { HandwrittenNote } from "@/components/graphics/handwritten-note";
 import { Container } from "@/components/layout/container";
+import { HeroVideoBackground } from "./hero-video-background";
+import { MagneticButton } from "@/components/motion/magnetic-button";
 import { useRef } from "react";
 import gsap from "gsap";
 import ScrollTrigger from "gsap/ScrollTrigger";
 import { useGSAP } from "@gsap/react";
 import { Sticker } from "@/components/graphics/sticker";
-import { Checkerboard } from "@/components/graphics/checkerboard";
 import { prefersReducedMotion } from "@/lib/motion/reduced-motion";
 
 if (typeof window !== "undefined") {
@@ -47,6 +48,17 @@ export function HeroSection() {
       const tl = gsap.timeline({ defaults: { ease: "power4.out" } });
 
       if (!reduced) {
+        // Cinematic background settle. The image must never be invisible
+        // by default — it's critical hero content, not a decorative
+        // reveal — so this only animates a subtle scale-down (never
+        // opacity) and explicitly guarantees full opacity throughout.
+        gsap.set("[data-reveal-bg]", { opacity: 1 });
+        gsap.fromTo(
+          "[data-reveal-bg]",
+          { scale: 1.05 },
+          { scale: 1, duration: 2.5, ease: "power2.out" }
+        );
+
         tl.fromTo(
           lines,
           { yPercent: 110 },
@@ -83,27 +95,19 @@ export function HeroSection() {
             "-=0.6"
           );
 
-        // ── Restrained parallax: right column + sticker move at different rates ──
-        gsap.to(rightColRef.current, {
-          yPercent: -6,
-          ease: "none",
+        // ── Restrained parallax: right column + sticker move at different
+        // rates off one shared ScrollTrigger (not two independent
+        // instances on the same trigger/start/end). ──
+        gsap.timeline({
           scrollTrigger: {
             trigger: containerRef.current,
             start: "top top",
             end: "bottom top",
             scrub: 0.8,
           },
-        });
-        gsap.to(stickerRef.current, {
-          yPercent: -14,
-          ease: "none",
-          scrollTrigger: {
-            trigger: containerRef.current,
-            start: "top top",
-            end: "bottom top",
-            scrub: 0.8,
-          },
-        });
+        })
+          .to(rightColRef.current, { yPercent: -6, ease: "none" }, 0)
+          .to(stickerRef.current, { yPercent: -14, ease: "none" }, 0);
       }
     },
     { scope: containerRef }
@@ -117,20 +121,21 @@ export function HeroSection() {
       data-section="hero"
     >
       {/* ── 1. Background image slot ── */}
-      {/* TODO: replace with approved KCATCH studio/hero video or image */}
+      {/* z-0 (not a negative z-index): the section itself paints bg-kc-black
+          as part of its own box, and a child with a negative z-index can
+          end up compositing BEHIND that paint once the section establishes
+          a stacking context (position:relative + overflow-hidden here) —
+          that was silently hiding this image entirely. Positive/zero
+          z-index on background layers + higher z-index on content
+          (content already uses z-10/relative below) keeps painting order
+          correct regardless of stacking-context quirks. */}
       <div
-        className="absolute inset-0 -z-10"
+        className="absolute inset-0 z-0 bg-kc-black"
         data-parallax
         data-parallax-depth="-0.2"
         aria-hidden="true"
       >
-        <div
-          className="w-full h-full"
-          style={{
-            background:
-              "linear-gradient(135deg, #05070B 0%, #0d1535 30%, #1a1f3a 60%, #05070B 100%)",
-          }}
-        />
+        <HeroVideoBackground sectionRef={containerRef} />
         {/* Subtle noise/grain texture overlay */}
         <div
           className="absolute inset-0 opacity-[0.03] mix-blend-overlay"
@@ -143,13 +148,18 @@ export function HeroSection() {
       </div>
 
       {/* ── 2. Dark overlay ── */}
+      {/* Lightened from the original placeholder-era values (90%/60% black)
+          now that a real, already-dark/moody photo sits behind it — the
+          old overlay was strong enough to make the actual photo
+          indistinguishable from solid black. Kept just enough on the left
+          for the yellow headline/body text to stay legible. */}
       <div
-        className="absolute inset-0 -z-10 bg-gradient-to-r from-kc-black/90 via-kc-black/60 to-transparent"
+        className="absolute inset-0 z-[1] bg-gradient-to-r from-kc-black/70 via-kc-black/35 to-kc-black/10"
         aria-hidden="true"
       />
 
       {/* ── Main content: asymmetric grid, left ~55% / right ~40% with a gap ── */}
-      <Container className="relative flex-1 grid grid-cols-1 lg:grid-cols-[minmax(0,1.35fr)_minmax(0,1fr)] gap-y-16 lg:gap-x-12 items-center w-full pt-28 pb-16 lg:pt-24 lg:pb-16">
+      <Container className="relative flex-1 grid grid-cols-1 lg:grid-cols-[minmax(0,1.35fr)_minmax(0,1fr)] gap-y-16 lg:gap-x-12 items-center w-full pt-28 pb-16 lg:pt-32 lg:pb-16">
         {/* Left column: primary content */}
         <div className="relative z-10 flex flex-col items-start">
           {/* ── 3. Headline — sized for composition, not viewport-fill ── */}
@@ -188,13 +198,16 @@ export function HeroSection() {
 
           {/* ── 6. Primary CTA ── */}
           <div data-reveal-cta className="flex items-center gap-6 mt-8">
-            <Link
-              href={HOME_HERO.primaryCta.href}
-              className="inline-flex items-center justify-center gap-3 bg-kc-yellow text-kc-black font-body text-sm font-bold uppercase tracking-widest px-8 py-3 hover:bg-kc-white hover:text-kc-black border border-transparent transition-all duration-300 focus-visible:outline-kc-white rounded-none"
-            >
-              <Play size={14} aria-hidden="true" className="flex-shrink-0" />
-              {HOME_HERO.primaryCta.label}
-            </Link>
+            <MagneticButton>
+              <Link
+                href={HOME_HERO.primaryCta.href}
+                data-cursor="play"
+                className="inline-flex items-center justify-center gap-3 bg-kc-yellow text-kc-black font-body text-sm font-bold uppercase tracking-widest px-8 py-3 hover:bg-kc-white hover:text-kc-black border border-transparent transition-all duration-300 focus-visible:outline-kc-white rounded-none"
+              >
+                <Play size={14} aria-hidden="true" className="flex-shrink-0" />
+                {HOME_HERO.primaryCta.label}
+              </Link>
+            </MagneticButton>
           </div>
 
           {/* ── 7. Scroll indicator ── */}
@@ -244,8 +257,8 @@ export function HeroSection() {
           <div className="relative flex items-end gap-6 lg:flex-row-reverse mt-4 lg:mt-8">
             <div ref={stickerRef}>
               <Sticker
+                src="/Images/PNGs/Finger image tilt right.png"
                 alt="KCATCH illustrated character"
-                placeholder="CHARACTER STICKER"
                 width={110}
                 height={110}
                 rotation={4}
@@ -262,18 +275,9 @@ export function HeroSection() {
         </div>
       </Container>
 
-      {/* ── 8. Bottom tape strip ── */}
-      <div className="relative z-20 w-full mt-auto" aria-hidden="true">
-        {/* Checkerboard accent on tape right side */}
-        <div className="absolute right-0 top-1/2 -translate-y-1/2 z-30">
-          <Checkerboard height="md" density="tight" colorA="#fff000" colorB="#000000" className="w-16 md:w-24 lg:w-32" />
-        </div>
-        <KcatchTape
-          text={HOME_HERO.tapeText}
-          marquee
-          variant="yellow"
-          className="shadow-2xl"
-        />
+      {/* ── 8. Tape stack transition into Featured Work ── */}
+      <div className="relative z-20 w-full mt-auto">
+        <TapeStack text={HOME_HERO.tapeText} />
       </div>
     </section>
   );

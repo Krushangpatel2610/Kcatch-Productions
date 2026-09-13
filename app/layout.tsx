@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { Bebas_Neue, Inter, Caveat } from "next/font/google";
 import "./globals.css";
 import { SmoothScrollProvider } from "@/components/motion/smooth-scroll-provider";
+import { Preloader } from "@/components/motion/preloader";
+import { CustomCursor } from "@/components/motion/custom-cursor";
 
 // ---------------------------------------------------------------------------
 // Font loading — tokenized so they can be swapped for official KCATCH fonts
@@ -50,9 +52,10 @@ export default function RootLayout({
   return (
     <html
       lang="en"
+      suppressHydrationWarning
       className={`${bebasNeue.variable} ${inter.variable} ${caveat.variable} h-full`}
     >
-      <body className="bg-kc-black text-kc-white antialiased overflow-x-hidden">
+      <body suppressHydrationWarning className="bg-kc-black text-kc-white antialiased overflow-x-hidden">
         {/* Skip to main content link for accessibility */}
         <a
           href="#main-content"
@@ -60,6 +63,8 @@ export default function RootLayout({
         >
           Skip to main content
         </a>
+        <Preloader />
+        <CustomCursor />
         <SmoothScrollProvider>{children}</SmoothScrollProvider>
       </body>
     </html>

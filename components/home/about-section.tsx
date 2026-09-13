@@ -29,27 +29,20 @@ export function AboutSection() {
     () => {
       if (prefersReducedMotion()) return;
 
-      gsap.to(bgRef.current, {
-        yPercent: 12,
-        ease: "none",
+      // One shared ScrollTrigger driving both layers (rather than two
+      // separate instances on the same trigger/start/end) — background
+      // and annotation move at different rates off the same scroll
+      // progress, not off two independent scroll listeners.
+      gsap.timeline({
         scrollTrigger: {
           trigger: sectionRef.current,
           start: "top bottom",
           end: "bottom top",
           scrub: 0.8,
         },
-      });
-
-      gsap.to(handRef.current, {
-        yPercent: -18,
-        ease: "none",
-        scrollTrigger: {
-          trigger: sectionRef.current,
-          start: "top bottom",
-          end: "bottom top",
-          scrub: 0.8,
-        },
-      });
+      })
+        .to(bgRef.current, { yPercent: 12, ease: "none" }, 0)
+        .to(handRef.current, { yPercent: -18, ease: "none" }, 0);
     },
     { scope: sectionRef }
   );

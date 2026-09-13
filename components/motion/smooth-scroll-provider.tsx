@@ -33,9 +33,14 @@ export function SmoothScrollProvider({ children }: SmoothScrollProviderProps) {
         // Register GSAP plugin
         gsap.registerPlugin(ScrollTrigger);
 
-        // Create single Lenis instance
+        // Create single Lenis instance. Tuned for "buttery, not floaty":
+        // duration lowered from 1.2 -> 0.9 so input still feels directly
+        // connected to the wheel/touch (1.2 read as laggy/disconnected),
+        // with an easeOutExpo-ish curve so motion still decelerates softly
+        // rather than stopping abruptly.
         const lenis = new Lenis({
-          duration: 1.2,
+          duration: 0.9,
+          easing: (t: number) => 1 - Math.pow(1 - t, 3),
           smoothWheel: true,
           wheelMultiplier: 1,
           touchMultiplier: 2,

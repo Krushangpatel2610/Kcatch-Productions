@@ -32,7 +32,6 @@ export function OfficeList() {
               <KcatchImage
                 src={`/contact/${office.city.toLowerCase()}.jpg`}
                 alt={`${office.city} office`}
-                placeholderLabel={office.city}
                 className="w-full h-28 mb-4"
               />
 

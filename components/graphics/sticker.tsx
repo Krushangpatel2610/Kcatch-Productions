@@ -1,6 +1,8 @@
 // components/graphics/sticker.tsx
 // Reusable decorative sticker / character PNG slot.
-// Creates a proper visual placeholder when the final PNG is not yet available.
+// Renders a clean, silent visual placeholder when the final PNG is not
+// yet available — never exposes implementation labels like
+// "CHARACTER STICKER" in the rendered UI.
 
 import Image from "next/image";
 import { cn } from "@/lib/utils";
@@ -13,8 +15,6 @@ type StickerProps = {
   rotation?: number;
   scale?: number;
   className?: string;
-  /** Label shown when asset is missing (dev only) */
-  placeholder?: string;
 };
 
 export function Sticker({
@@ -25,26 +25,23 @@ export function Sticker({
   rotation = 0,
   scale = 1,
   className,
-  placeholder,
 }: StickerProps) {
   const transform = `rotate(${rotation}deg) scale(${scale})`;
 
   if (!src) {
-    // Placeholder slot — shows label in dev, transparent in prod
+    // Silent placeholder slot — a plain dashed mark, no visible text.
+    // Keeps the composition's spacing/rotation intact without exposing
+    // a development label in the rendered page.
     return (
       <div
         className={cn(
-          "relative flex items-center justify-center rounded-full border-2 border-dashed border-kc-yellow/40 bg-kc-yellow/5 text-kc-muted text-xs font-mono",
+          "relative rounded-full border-2 border-dashed border-kc-yellow/30",
           className
         )}
         style={{ width, height, transform }}
         aria-hidden="true"
         title={`Asset slot: ${alt}`}
-      >
-        <span className="p-2 text-center leading-tight opacity-60">
-          {placeholder ?? alt}
-        </span>
-      </div>
+      />
     );
   }
 

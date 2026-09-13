@@ -33,7 +33,6 @@ function PolaroidSlot({
       <KcatchImage
         src={src}
         alt={label}
-        placeholderLabel={label}
         className="w-full h-[170px]"
       />
       <HandwrittenNote
@@ -55,7 +54,7 @@ export function ContactCTA() {
       data-section="contact-cta"
     >
       <Container className="py-20 md:py-28">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
           {/* Left: headline + CTA */}
           <div>
             <Reveal direction="up">
@@ -91,8 +90,11 @@ export function ContactCTA() {
             </Reveal>
           </div>
 
-          {/* Right: polaroids + sticker */}
-          <div className="flex items-center justify-center md:justify-end gap-6 pt-8 lg:pt-16">
+          {/* Right: polaroids + sticker — no extra top offset (that's
+              what pushed this column visibly lower than the headline,
+              reading as a disconnected block); items-center on the grid
+              above now keeps both columns on the same vertical center. */}
+          <div className="relative flex items-center justify-center md:justify-end gap-6">
             <PolaroidSlot
               src={CONTACT_CTA.polaroid1}
               note={CONTACT_CTA.polaroidNote1}
@@ -105,14 +107,13 @@ export function ContactCTA() {
               rotation={4}
               label="KCATCH team"
             />
-            {/* TODO: sticker slot */}
             <Sticker
+              src="/Images/PNGs/Banana man Left.png"
               alt="KCATCH character sticker"
-              placeholder="CHARACTER\nSTICKER"
-              width={120}
-              height={120}
+              width={110}
+              height={110}
               rotation={-8}
-              className="absolute md:relative bottom-4 md:bottom-auto right-4 md:right-auto"
+              className="absolute -bottom-6 -right-2 md:-right-8"
             />
           </div>
         </div>

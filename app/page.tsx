@@ -28,9 +28,22 @@ export default function HomePage() {
         4. About / Visibility
         5. Our Family
         6. Final CTA
+
+        Hero → Featured Work uses a sticky/overlap technique so Featured
+        Work visually slides up and over the Hero instead of the two
+        sections simply stacking — the Hero stays pinned in place (native
+        CSS sticky, no extra ScrollTrigger) while Featured Work's own
+        (already-pinned) section scrolls up to cover it. z-index keeps
+        Featured Work above the Hero once it arrives.
       */}
-      <HeroSection />
-      <FeaturedWorkSection />
+      <div className="relative">
+        <div className="sticky top-0 z-0">
+          <HeroSection />
+        </div>
+        <div className="relative z-10">
+          <FeaturedWorkSection />
+        </div>
+      </div>
       <CapabilitiesSection />
       <AboutSection />
       <FamilySection />

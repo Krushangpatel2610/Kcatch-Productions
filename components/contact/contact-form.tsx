@@ -13,6 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
+import { MagneticButton } from "@/components/motion/magnetic-button";
 
 type FormState = {
   name: string;
@@ -217,20 +218,22 @@ export function ContactForm() {
 
       {/* Submit */}
       <div className="flex items-center gap-6 pt-4">
-        <Button
-          type="submit"
-          disabled={status === "submitting"}
-          className="px-8 py-4 h-auto"
-        >
-          {status === "submitting" ? "SENDING..." : CONTACT_FORM.cta}
-          {status !== "submitting" && (
-            <ArrowRight
-              size={14}
-              aria-hidden="true"
-              className="transition-transform group-hover:translate-x-1"
-            />
-          )}
-        </Button>
+        <MagneticButton>
+          <Button
+            type="submit"
+            disabled={status === "submitting"}
+            className="px-8 py-4 h-auto"
+          >
+            {status === "submitting" ? "SENDING..." : CONTACT_FORM.cta}
+            {status !== "submitting" && (
+              <ArrowRight
+                size={14}
+                aria-hidden="true"
+                className="transition-transform group-hover:translate-x-1"
+              />
+            )}
+          </Button>
+        </MagneticButton>
         <p className="font-hand text-kc-black/50 text-base">
           {CONTACT_FORM.orNote}
         </p>

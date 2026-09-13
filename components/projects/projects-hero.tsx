@@ -3,9 +3,8 @@
 // References: Projects.png
 
 import { Sticker } from "@/components/graphics/sticker";
-import { KcatchTape } from "@/components/graphics/kcatch-tape";
+import { TapeStack } from "@/components/graphics/tape-stack";
 import { HandwrittenNote } from "@/components/graphics/handwritten-note";
-import { Checkerboard } from "@/components/graphics/checkerboard";
 import { Reveal } from "@/components/motion/reveal";
 import { Container } from "@/components/layout/container";
 
@@ -89,10 +88,9 @@ export function ProjectsHero() {
               rotation={-2}
             />
 
-            {/* TODO: camera sticker slot */}
             <Sticker
-              alt="KCATCH camera graphic"
-              placeholder="CAMERA\nSTICKER"
+              src="/Images/PNGs/Banana man Left.png"
+              alt="KCATCH mascot graphic"
               width={100}
               height={100}
               rotation={8}
@@ -101,18 +99,8 @@ export function ProjectsHero() {
         </div>
       </Container>
 
-      {/* Yellow tape + checkerboard — same tape language as the Home hero */}
-      <div className="relative w-full" aria-hidden="true">
-        <div className="absolute right-0 top-1/2 -translate-y-1/2 z-30">
-          <Checkerboard height="md" density="tight" colorA="#fff000" colorB="#000000" className="w-16 md:w-24 lg:w-32" />
-        </div>
-        <KcatchTape
-          text="KCATCH THE EYE"
-          marquee
-          variant="yellow"
-          rotation={0}
-        />
-      </div>
+      {/* Tape stack — same tape language as the Home hero */}
+      <TapeStack text="KCATCH THE EYE" />
     </section>
   );
 }

@@ -28,7 +28,7 @@ export const CONTACT_HERO = {
   supportWords: ["IDEAS.", "BRANDS.", "CULTURE.", "PEOPLE."],
   supportTagline: "THAT'S WHAT WE KCATCH.",
   annotation1: "GOOD IDEAS START HERE.",
-  annotation2: "MAKE GOOD NOUBLE.",
+  annotation2: "MAKE GOOD TROUBLE.",
   // TODO: replace with approved studio/camera hero image
   bgImage: "/contact/hero-bg.jpg",
 };

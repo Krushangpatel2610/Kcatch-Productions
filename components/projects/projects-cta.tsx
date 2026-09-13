@@ -30,10 +30,9 @@ export function ProjectsCTA() {
           </div>
 
           <div className="flex items-center gap-6">
-            {/* TODO: sticker slot — KCATCH character */}
             <Sticker
+              src="/Images/PNGs/Banana man Right.png"
               alt="KCATCH character"
-              placeholder="STICKER"
               width={100}
               height={100}
               rotation={-5}
