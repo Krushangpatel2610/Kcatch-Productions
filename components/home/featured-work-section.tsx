@@ -3,11 +3,16 @@
 // Home Featured Work horizontal scroll section.
 //
 // Architecture:
-//   - Desktop (md+): GSAP ScrollTrigger pins the section and translates
-//     the track horizontally as the user scrolls vertically.
-//   - Mobile: no pinning — the track is a native overflow-x-auto
-//     scroll-snap carousel, tracked via a scroll listener instead of
-//     ScrollTrigger.
+//   One GSAP ScrollTrigger pins a track and translates it horizontally
+//   as the user scrolls/swipes vertically, at every viewport width.
+//   >=1024px: pins the WHOLE section (intro header + image carousel +
+//     progress footer) as one frozen unit — unchanged original behavior.
+//   <1024px: pins ONLY the image carousel + progress footer (pinTargetRef
+//     below) — the intro header sits above it in normal scroll flow, so
+//     it scrolls past first, and the pin engages once the carousel
+//     itself reaches the viewport top ("intro -> scroll -> image
+//     animation frame"). See project-scene.tsx for the matching
+//     image-dominant/metadata-overlay layout on this range.
 //
 // SCROLL PROGRESS IS THE SINGLE SOURCE OF TRUTH.
 // Every per-project visual state (scale, opacity, text position) is
@@ -57,13 +62,25 @@ export function FeaturedWorkSection() {
   const sectionRef = useRef<HTMLElement>(null);
   const trackRef = useRef<HTMLDivElement>(null);
   const sceneRefs = useRef<(HTMLElement | null)[]>([]);
+  // <1024px only: wraps just the image-carousel viewport (+ progress
+  // footer), NOT the intro header above it. Used as the pin trigger on
+  // mobile/tablet so the intro scrolls past normally first, and only the
+  // image-carousel itself pins — see the trigger selection in useGSAP
+  // below. Unused (and inert) at >=1024px, where sectionRef (the whole
+  // section, intro included) stays the trigger exactly as before.
+  const pinTargetRef = useRef<HTMLDivElement>(null);
 
   useGSAP(() => {
-    if (!sectionRef.current || !trackRef.current) return;
+    if (!sectionRef.current || !trackRef.current || !pinTargetRef.current) return;
 
-    const isMobile = window.matchMedia("(max-width: 768px)").matches;
-    if (isMobile) return;
-
+    // Reused unchanged for every viewport width — see the height/layout
+    // split in the JSX below (and project-scene.tsx's FeaturedScene) for
+    // the only viewport-specific adjustments: this pin+scrub mechanism
+    // itself is identical everywhere. ScrollTrigger reads native scroll
+    // position directly (no Lenis dependency — see smooth-scroll-provider,
+    // which already skips Lenis on touch devices), so vertical touch-swipe
+    // drives this exactly the same way vertical wheel-scroll does on
+    // desktop: no extra touch listener, no preventDefault, nothing added.
     const reduced = prefersReducedMotion();
     const track = trackRef.current;
 
@@ -214,8 +231,19 @@ export function FeaturedWorkSection() {
     });
 
     // 2. The ScrollTrigger: pins the section and scrubs the tween.
+    // Pin trigger differs by breakpoint (checked once here, not a second
+    // scroll system — still exactly one ScrollTrigger.create() call):
+    // >=1024px pins the WHOLE section (sectionRef, intro included) so it
+    // scrolls in as one frozen unit with the image carousel, exactly as
+    // before this change. <1024px pins ONLY pinTargetRef (the image
+    // carousel + progress footer, not the intro header) so the intro
+    // scrolls past normally first and the pin engages once the carousel
+    // itself reaches the top — matching the intended
+    // "intro -> scroll -> image animation frame" mobile sequence.
+    const isDesktop = window.matchMedia("(min-width: 1024px)").matches;
+    const pinTrigger = isDesktop ? sectionRef.current : pinTargetRef.current;
     ScrollTrigger.create({
-      trigger: sectionRef.current,
+      trigger: pinTrigger,
       start: "top top",
       end: () => `+=${getScrollAmount()}`,
       pin: true,
@@ -293,48 +321,17 @@ export function FeaturedWorkSection() {
     };
   }, []);
 
-  // Mobile: the track is a native scroll-snap carousel, so track the
-  // active index from scroll position instead of GSAP's ScrollTrigger.
-  useEffect(() => {
-    const track = trackRef.current;
-    if (!track) return;
-
-    const isMobile = () => window.matchMedia("(max-width: 768px)").matches;
-
-    const handleScroll = () => {
-      if (!isMobile()) return;
-      const children = Array.from(track.children) as HTMLElement[];
-      const trackCenter = track.scrollLeft + track.clientWidth / 2;
-      let closest = 0;
-      let closestDist = Infinity;
-      children.forEach((child, i) => {
-        const childCenter = child.offsetLeft + child.clientWidth / 2;
-        const dist = Math.abs(childCenter - trackCenter);
-        if (dist < closestDist) {
-          closestDist = dist;
-          closest = i;
-        }
-      });
-      setActiveIndex(closest);
-    };
-
-    track.addEventListener("scroll", handleScroll, { passive: true });
-    return () => track.removeEventListener("scroll", handleScroll);
-  }, []);
-
+  // The pinned ScrollTrigger now owns scroll position at every viewport
+  // width (the track is transform-driven, never natively scrollable), so
+  // activeIndex tracking lives entirely in applySceneState's onUpdate —
+  // no separate scroll listener needed.
   const goTo = (i: number) => {
     const clamped = Math.max(0, Math.min(total - 1, i));
     setActiveIndex(clamped);
-    const isMobile = window.matchMedia("(max-width: 768px)").matches;
-    if (isMobile) {
-      const el = document.querySelector(`[data-scene="${featuredProjects[clamped].id}"]`);
-      el?.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "center" });
-      return;
-    }
 
-    // Desktop: the pinned ScrollTrigger owns scroll position, so move the
-    // window scroll to the point in the pin range that matches this index.
-    // Same window-center formula as applySceneState/onUpdate above
+    // The pinned ScrollTrigger owns scroll position, so move the window
+    // scroll to the point in the pin range that matches this index. Same
+    // window-center formula as applySceneState/onUpdate above
     // ((i + 0.5) / total, not i / (total - 1)) so a next/prev click lands
     // exactly where that project is fully dominant, not partway into its
     // neighbor's window.
@@ -430,91 +427,99 @@ export function FeaturedWorkSection() {
         </div>
       </Container>
 
-      {/* ── Horizontal scroll viewport ── */}
-      {/*
-        Desktop (md+): GSAP pins the section and translates the track.
-        Mobile: no pinning — the track becomes a native horizontal
-        scroll-snap carousel so it never overflows the page or gets stuck
-        off-screen with no way to reach it.
-        data-horizontal-section → the pinned outer container
-        data-horizontal-track   → the element that gets translateX
-        Each ProjectScene is data-scene="<id>"
-      */}
-      {/* Height contract is genuinely different per breakpoint, not just
-          smaller numbers: desktop pins the whole scene inside one
-          viewport height (clamp below), so every descendant can safely
-          assume h-full. Mobile is a natural-height, vertically-stacked
-          card (metadata column ABOVE media, not beside it — see
-          project-scene.tsx's flex-col default) that needs to lay out at
-          its own content height; forcing that stack into the same
-          ~360-520px pinned-viewport box is what was clipping/crushing
-          project content on mobile (metadata and media fighting for
-          space that isn't there). h-auto md:h-[...] gives mobile its own
-          natural height while leaving the desktop pinned contract
-          untouched. */}
-      <div
-        className="relative overflow-visible h-auto md:h-[clamp(360px,48svh,520px)]"
-        data-horizontal-section
-        data-cursor="drag"
-      >
-        {/* Horizontal track — GSAP applies translateX on desktop.
-            On mobile it's a native overflow-x-auto snap carousel instead.
-            pl-6/md:pl-10 matches Container's own gutter so Project 01's
-            metadata aligns with the section header above it instead of
-            starting flush against the browser edge; pr matches on the
-            trailing side so the last scene gets the same breathing room. */}
+      {/* ── Image-carousel + progress footer — the pin target ── */}
+      {/* >=1024px: this wrapper is purely structural — sectionRef (the
+          whole section, intro included) is still the actual pin trigger,
+          so nothing here changes desktop's behavior.
+          <1024px: THIS wrapper (pinTargetRef) is the pin trigger, not
+          sectionRef — the intro Container above scrolls normally, and
+          only once this wrapper's own top reaches the viewport top does
+          the pin engage, matching "intro -> scroll -> image animation
+          frame." */}
+      <div ref={pinTargetRef} className="relative">
+        {/* ── Horizontal scroll viewport ── */}
+        {/*
+          data-horizontal-section → the pinned outer container
+          data-horizontal-track   → the element that gets translateX
+          Each ProjectScene is data-scene="<id>"
+        */}
+        {/* Height contract differs by breakpoint. <1024px: the scene is
+            now an image-dominant frame (metadata overlays the image
+            rather than stacking above it — see project-scene.tsx), so
+            this scales with the actual viewport (88svh) rather than a
+            conservative fixed range, so the pinned frame (this + the
+            progress footer below) fills most of the real screen instead
+            of leaving the section's own background exposed as dead
+            space beneath the project composition — purely a visual
+            frame height, unrelated to the horizontal scroll DISTANCE
+            (still driven entirely by track.scrollWidth in useGSAP above).
+            >=1024px (unchanged): desktop's side-by-side clamp. */}
         <div
-          ref={trackRef}
-          className="flex items-stretch h-auto md:h-full w-max md:overflow-visible overflow-x-auto snap-x snap-mandatory md:snap-none scrollbar-none pl-6 md:pl-10 pr-6 md:pr-10"
-          data-horizontal-track
+          className="relative overflow-visible h-[clamp(600px,88svh,820px)] lg:h-[clamp(360px,48svh,520px)]"
+          data-horizontal-section
+          data-cursor="drag"
         >
-          {featuredProjects.map((project, i) => (
-            <div
-              key={project.id}
-              ref={(el) => {
-                sceneRefs.current[i] = el;
-              }}
-              className="h-auto md:h-full flex-shrink-0 w-[90vw] md:w-[88vw] lg:w-[82vw] flex items-center justify-center pr-4 md:pr-8 snap-center"
-            >
-              <ProjectScene
-                project={project}
-                index={i}
-                total={total}
-                variant="featured"
-              />
-            </div>
-          ))}
+          {/* Horizontal track — GSAP applies translateX at every viewport
+              width now (see the pin+scrub ScrollTrigger above); the track
+              is never natively scrollable, so overflow/snap stay fixed
+              regardless of breakpoint. pl-6/md:pl-10 matches Container's
+              own gutter so Project 01's metadata aligns with the section
+              header above it instead of starting flush against the browser
+              edge; pr matches on the trailing side so the last scene gets
+              the same breathing room. */}
+          <div
+            ref={trackRef}
+            className="flex items-stretch h-full w-max overflow-visible snap-none scrollbar-none pl-6 md:pl-10 pr-6 md:pr-10"
+            data-horizontal-track
+          >
+            {featuredProjects.map((project, i) => (
+              <div
+                key={project.id}
+                ref={(el) => {
+                  sceneRefs.current[i] = el;
+                }}
+                className="h-full flex-shrink-0 w-[90vw] md:w-[88vw] lg:w-[82vw] flex items-center justify-center pr-4 md:pr-8"
+              >
+                <ProjectScene
+                  project={project}
+                  index={i}
+                  total={total}
+                  variant="featured"
+                />
+              </div>
+            ))}
+          </div>
+
+          {/* Edge gradient — shows next scene is coming */}
+          <div
+            className="absolute right-0 top-0 bottom-0 w-16 md:w-32 pointer-events-none z-10"
+            style={{
+              background: "linear-gradient(to left, #05070B 0%, transparent 100%)",
+            }}
+            aria-hidden="true"
+          />
+          <div
+            className="absolute left-0 top-0 bottom-0 w-8 md:w-12 pointer-events-none z-10"
+            style={{
+              background: "linear-gradient(to right, #05070B 0%, transparent 100%)",
+            }}
+            aria-hidden="true"
+          />
         </div>
 
-        {/* Edge gradient — shows next scene is coming */}
-        <div
-          className="absolute right-0 top-0 bottom-0 w-16 md:w-32 pointer-events-none z-10"
-          style={{
-            background: "linear-gradient(to left, #05070B 0%, transparent 100%)",
-          }}
-          aria-hidden="true"
-        />
-        <div
-          className="absolute left-0 top-0 bottom-0 w-8 md:w-12 pointer-events-none z-10"
-          style={{
-            background: "linear-gradient(to right, #05070B 0%, transparent 100%)",
-          }}
-          aria-hidden="true"
-        />
+        {/* ── Progress indicator ── */}
+        {/* Orbital node ring sits alongside the linear bar as a secondary,
+            decorative confirmation of the same state (RocketAir-inspired,
+            kept intentionally small/subtle) — not a replacement for it. */}
+        <Container className="pt-4 pb-6 md:pb-8 flex items-center gap-4">
+          <ScrollProgress
+            current={activeIndex + 1}
+            total={total}
+            className="max-w-sm flex-1"
+          />
+          <OrbitalIndicator current={activeIndex + 1} total={total} />
+        </Container>
       </div>
-
-      {/* ── Progress indicator ── */}
-      {/* Orbital node ring sits alongside the linear bar as a secondary,
-          decorative confirmation of the same state (RocketAir-inspired,
-          kept intentionally small/subtle) — not a replacement for it. */}
-      <Container className="pt-4 pb-6 md:pb-8 flex items-center gap-4">
-        <ScrollProgress
-          current={activeIndex + 1}
-          total={total}
-          className="max-w-sm flex-1"
-        />
-        <OrbitalIndicator current={activeIndex + 1} total={total} />
-      </Container>
     </section>
   );
 }

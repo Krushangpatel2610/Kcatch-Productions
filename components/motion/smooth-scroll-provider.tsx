@@ -16,10 +16,37 @@ type SmoothScrollProviderProps = {
   children: React.ReactNode;
 };
 
+// Same touch-device check CustomCursor uses to bail out of a
+// desktop-only enhancement.
+function isTouchDevice() {
+  return window.matchMedia("(pointer: coarse)").matches;
+}
+
 export function SmoothScrollProvider({ children }: SmoothScrollProviderProps) {
   useEffect(() => {
     // Skip Lenis if user prefers reduced motion
     if (prefersReducedMotion()) return;
+
+    // Lenis is a desktop-only enhancement (wheel-scroll easing). On a
+    // touch device it never actually smooths touch input (syncTouch
+    // defaults to false), but it still attaches its own non-passive
+    // touchstart/touchmove/touchend listeners and inserts itself as an
+    // extra relay between native scroll and ScrollTrigger.update() — a
+    // real source of scroll-position desync/glitching on mobile for
+    // zero user-facing benefit. ScrollTrigger already listens to native
+    // scroll directly and doesn't need Lenis to function, so skipping it
+    // here removes that risk entirely without touching a single
+    // animation: every ScrollTrigger instance still fires off the
+    // browser's own native scroll position exactly as it would with no
+    // smooth-scroll library at all.
+    if (isTouchDevice()) {
+      if ("fonts" in document) {
+        document.fonts.ready.then(() => ScrollTrigger.refresh());
+      }
+      const handleLoad = () => ScrollTrigger.refresh();
+      window.addEventListener("load", handleLoad);
+      return () => window.removeEventListener("load", handleLoad);
+    }
 
     // Static imports (gsap/ScrollTrigger are already static imports in
     // Preloader, HeroSection, Navigation, etc.) — the previous dynamic
