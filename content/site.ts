@@ -103,7 +103,7 @@ export const ABOUT_SECTION = {
   headline2: "ISN'T LUCK.",
   headline3: "IT'S DESIGN.",
   body: "We live in a world where attention is currency, and we engineer moments that make people pause, look twice, and remember.",
-  cta: { label: "OUR STORY", href: "/contact" },
+  cta: { label: "OUR STORY", href: "/projects#story-01" },
   annotation: "SAME IDEAS. BIGGER IMPACT.",
   // TODO: replace with approved studio/campaign background image
   bgImage: "/contact/studio-bg.jpg",

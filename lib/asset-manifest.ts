@@ -6,7 +6,6 @@ export const assetManifest = new Set([
   "/Images/BG Images/LandingPageBg.webp",
   "/Images/logo/Kcatch-logo.png",
   "/Images/PNGs/Banana man Left.png",
-  "/Images/PNGs/Banana man Right.png",
   "/Images/PNGs/Finger image tilt right.png",
   "/Images/PNGs/Flying Plane.png",
   "/Images/PNGs/Loudspeaker.png",

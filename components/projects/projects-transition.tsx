@@ -77,7 +77,8 @@ export function ProjectsTransition() {
     <div aria-label="Our Story">
       {/* ================= CHAPTER 01 — WHY WE EXIST ================= */}
       <section
-        className="relative bg-kc-black overflow-hidden py-24 md:min-h-screen lg:min-h-[105vh] md:flex md:items-center md:py-28"
+        id="story-01"
+        className="relative bg-kc-black overflow-hidden py-24 md:min-h-screen lg:min-h-[105vh] md:flex md:items-center md:py-28 scroll-mt-24 md:scroll-mt-28 lg:scroll-mt-32"
         aria-label="Why we exist"
         data-section="story-01"
       >

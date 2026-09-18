@@ -7,7 +7,6 @@ import { SiteShell } from "@/components/layout/site-shell";
 import { ProjectsHero } from "@/components/projects/projects-hero";
 import { ProjectArchive } from "@/components/projects/project-archive";
 import { ProjectsTransition } from "@/components/projects/projects-transition";
-import { ProjectsCTA } from "@/components/projects/projects-cta";
 
 export const metadata: Metadata = {
   title: "KCATCH Media | Projects",
@@ -21,7 +20,6 @@ export default function ProjectsPage() {
       <ProjectsHero />
       <ProjectArchive />
       <ProjectsTransition />
-      <ProjectsCTA />
     </SiteShell>
   );
 }
