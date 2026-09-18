@@ -116,40 +116,39 @@ export function Navigation() {
           </Link>
         </div>
 
-        {/* Desktop nav - Center */}
-        <nav
-          className="hidden md:flex flex-1 justify-center items-center gap-10"
-          aria-label="Primary navigation"
-        >
-          {NAV_LINKS.map((link) => {
-            const isActive =
-              link.href === "/"
-                ? pathname === "/"
-                : pathname.startsWith(link.href);
-            return (
-              <Link
-                key={link.href}
-                href={link.href}
-                className={cn(
-                  "font-body text-xs uppercase tracking-widest transition-all duration-300 relative group py-2 focus-visible:outline-kc-yellow",
-                  isActive
-                    ? "text-kc-yellow"
-                    : "text-kc-white hover:text-kc-yellow"
-                )}
-                aria-current={isActive ? "page" : undefined}
-              >
-                {link.label}
-                <span className={cn(
-                  "absolute bottom-0 left-0 h-[2px] bg-kc-yellow transition-all duration-300",
-                  isActive ? "w-full" : "w-0 group-hover:w-full"
-                )} />
-              </Link>
-            );
-          })}
-        </nav>
+        {/* Desktop Nav + CTA - Right */}
+        <div className="hidden md:flex flex-1 justify-end items-center gap-10">
+          <nav
+            className="flex items-center gap-10"
+            aria-label="Primary navigation"
+          >
+            {NAV_LINKS.map((link) => {
+              const isActive =
+                link.href === "/"
+                  ? pathname === "/"
+                  : pathname.startsWith(link.href);
+              return (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  className={cn(
+                    "font-body text-xs uppercase tracking-widest transition-all duration-300 relative group py-2 focus-visible:outline-kc-yellow",
+                    isActive
+                      ? "text-kc-yellow"
+                      : "text-kc-white hover:text-kc-yellow"
+                  )}
+                  aria-current={isActive ? "page" : undefined}
+                >
+                  {link.label}
+                  <span className={cn(
+                    "absolute bottom-0 left-0 h-[2px] bg-kc-yellow transition-all duration-300",
+                    isActive ? "w-full" : "w-0 group-hover:w-full"
+                  )} />
+                </Link>
+              );
+            })}
+          </nav>
 
-        {/* Desktop CTA - Right */}
-        <div className="hidden md:flex flex-1 justify-end">
           <Link
             href={NAV_CTA.href}
             className="inline-flex items-center gap-2 border border-kc-yellow bg-kc-black text-kc-yellow font-body text-[10px] md:text-xs uppercase tracking-widest px-5 py-2 hover:bg-kc-yellow hover:text-kc-black transition-all duration-300 focus-visible:outline-kc-yellow group rounded-none"

@@ -16,11 +16,22 @@ import { Reveal } from "@/components/motion/reveal";
 import { Checkerboard } from "@/components/graphics/checkerboard";
 import { Container } from "@/components/layout/container";
 import { MagneticButton } from "@/components/motion/magnetic-button";
+import { MarqueeStrip } from "@/components/graphics/marquee-strip";
 import { prefersReducedMotion } from "@/lib/motion/reduced-motion";
 
 if (typeof window !== "undefined") {
   gsap.registerPlugin(ScrollTrigger, useGSAP);
 }
+
+// "Ready when you are" treatment, adapted from kcatch-media's contact.tsx —
+// content/copy only, reusing this section's existing GSAP/Reveal/Container
+// architecture rather than a separate CTA section.
+const READY_MARQUEE_ITEMS = [
+  "LET'S TALK",
+  "START A PROJECT",
+  "KCATCH THE DAMN EYE",
+  "MADE TO BE SEEN",
+];
 
 export function FinalCTASection() {
   const sectionRef = useRef<HTMLElement>(null);
@@ -55,12 +66,22 @@ export function FinalCTASection() {
       data-section="final-cta"
     >
       {/* Top checkerboard accent */}
-      <Checkerboard height="sm" density="tight" colorA="#ffffff" colorB="#000000" />
+      <Checkerboard height="sm" density="tight" />
+
+      {/* "Ready when you are" ticker — reuses the migrated MarqueeStrip */}
+      <MarqueeStrip items={READY_MARQUEE_ITEMS} variant="checker" duration={30} />
 
       <Container className="relative py-20 md:py-28">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
           {/* Left: headline */}
           <div>
+            <Reveal direction="up" className="mb-4">
+              <p className="inline-flex items-center gap-3 font-body text-xs font-bold uppercase tracking-[0.3em] text-kc-yellow">
+                <span className="inline-block h-2 w-2 bg-kc-yellow" />
+                Ready when you are
+              </p>
+            </Reveal>
+
             <Reveal direction="up">
               <h2
                 className="font-display text-kc-yellow uppercase leading-none"

@@ -140,6 +140,59 @@ export const CLIENTS: Client[] = [
 ];
 
 // ---------------------------------------------------------------------------
+// Our Family — full brand list (Home page "OUR FAMILY" section only).
+// Separate from CLIENTS above (which also feeds OrbitSection's inner ring —
+// kept untouched so Orbit's rendered output doesn't change).
+// `logo: null` means no approved logo asset exists yet for that brand;
+// FamilySection falls back to rendering the brand name as text until a
+// real logo is supplied — see the report after this array is wired in.
+// ---------------------------------------------------------------------------
+export type FamilyBrand = {
+  id: string;
+  name: string;
+  logo: string | null;
+  alt: string;
+};
+
+export const FAMILY_BRANDS: FamilyBrand[] = [
+  { id: "the-hebron-school", name: "The Hebron School", logo: null, alt: "The Hebron School" },
+  { id: "s-dev", name: "S Dev", logo: null, alt: "S Dev" },
+  { id: "k9-restro", name: "K9 Restro", logo: null, alt: "K9 Restro" },
+  { id: "swiggy-family", name: "Swiggy", logo: null, alt: "Swiggy" },
+  { id: "capsul-family", name: "Capsul", logo: null, alt: "Capsul" },
+  { id: "ministry-of-culture", name: "Ministry of Culture — Government of India", logo: null, alt: "Ministry of Culture — Government of India" },
+  { id: "pravegs-grand-eulogia", name: "Praveg's Grand Eulogia", logo: null, alt: "Praveg's Grand Eulogia" },
+  { id: "pepperfry-family", name: "Pepperfry", logo: null, alt: "Pepperfry" },
+  { id: "pramesh", name: "Pramesh", logo: null, alt: "Pramesh" },
+  { id: "bailamos", name: "Bailamos", logo: null, alt: "Bailamos" },
+  { id: "healuxe", name: "Healuxe", logo: null, alt: "Healuxe" },
+  { id: "the-new-hebron-preschool", name: "The New Hebron Preschool", logo: null, alt: "The New Hebron Preschool" },
+  { id: "gujarat-police", name: "Gujarat Police", logo: null, alt: "Gujarat Police" },
+  { id: "happinezz", name: "HappinEzz / Happiness", logo: null, alt: "HappinEzz / Happiness" },
+  { id: "wellbalance", name: "WellBalance", logo: null, alt: "WellBalance" },
+  { id: "thc", name: "THC — The Heritage Culture", logo: null, alt: "THC — The Heritage Culture" },
+  { id: "anytime-fitness", name: "Anytime Fitness", logo: null, alt: "Anytime Fitness" },
+  { id: "azadi-ka-amrit-mahotsav", name: "Azadi Ka Amrit Mahotsav", logo: null, alt: "Azadi Ka Amrit Mahotsav" },
+  { id: "roastery-culture", name: "Roastery Culture", logo: null, alt: "Roastery Culture" },
+  { id: "the-school-post", name: "The School Post", logo: null, alt: "The School Post" },
+  { id: "kidzee", name: "Kidzee", logo: null, alt: "Kidzee" },
+  { id: "originiya", name: "oriGiniya", logo: null, alt: "oriGiniya" },
+  { id: "red-fm", name: "Red FM 93.5", logo: null, alt: "Red FM 93.5" },
+  { id: "gls-university", name: "GLS University", logo: null, alt: "GLS University" },
+  { id: "radio-city", name: "Radio City 91.1 FM", logo: null, alt: "Radio City 91.1 FM" },
+  { id: "rudraksh-dental-clinic", name: "Rudraksh Dental Clinic", logo: null, alt: "Rudraksh Dental Clinic" },
+  { id: "grace-coffee", name: "Grace Coffee", logo: null, alt: "Grace Coffee" },
+  { id: "the-entertainers", name: "The Entertainers", logo: null, alt: "The Entertainers" },
+  { id: "tea-post", name: "tea post", logo: null, alt: "tea post" },
+  { id: "fr-fitness", name: "FR Fitness", logo: null, alt: "FR Fitness" },
+  { id: "ace-bounce", name: "Ace Bounce", logo: null, alt: "Ace Bounce" },
+  { id: "the-ummed-hotels", name: "The Ummed Hotels", logo: null, alt: "The Ummed Hotels" },
+  { id: "laxmi-namkeen", name: "Laxmi Namkeen", logo: null, alt: "Laxmi Namkeen" },
+  { id: "hook", name: "HOOK", logo: null, alt: "HOOK" },
+  { id: "aquaplus", name: "Aquaplus", logo: null, alt: "Aquaplus" },
+];
+
+// ---------------------------------------------------------------------------
 // Final CTA
 // ---------------------------------------------------------------------------
 export const FINAL_CTA = {

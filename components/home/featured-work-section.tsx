@@ -57,13 +57,6 @@ export function FeaturedWorkSection() {
   const sectionRef = useRef<HTMLElement>(null);
   const trackRef = useRef<HTMLDivElement>(null);
   const sceneRefs = useRef<(HTMLElement | null)[]>([]);
-  // Holds the "set up the pinned ScrollTrigger" function so the separate
-  // preloader-gate effect below can call it once the gate fires —
-  // useGSAP's own callback return value isn't used as a cleanup hook by
-  // @gsap/react (only its internal context.revert() on unmount is), so
-  // a plain window-event subscription's lifecycle needs a real useEffect
-  // instead, exactly the pattern already used in hero-section.tsx.
-  const createScrollTriggerRef = useRef<(() => void) | null>(null);
 
   useGSAP(() => {
     if (!sectionRef.current || !trackRef.current) return;
@@ -96,24 +89,44 @@ export function FeaturedWorkSection() {
     // No `animation` property on the ScrollTrigger — GSAP's scrub proxy
     // is replaced by a direct gsap.set() call that is 100% driven by
     // the live progress value ScrollTrigger provides.
-    const getScrollAmount = () =>
-      track.scrollWidth - document.documentElement.clientWidth;
+    const getScrollAmount = () => {
+      if (!track) return 0;
+      return track.scrollWidth - document.documentElement.clientWidth;
+    };
+    // We will cache layout measurements during onRefresh to avoid thrashing.
+    let cachedMetrics = {
+      viewportWidth: 0,
+      maxScroll: 0,
+      scenes: [] as { left: number; width: number }[],
+    };
 
-    // Each project gets an equal "active window" along the 0-1 global
-    // progress. Project i's own progress reaches 1 (fully settled) at
-    // the center of its window and fades toward 0 at the edges — this
-    // is the projectProgress = mapRange(...) model, evaluated fresh on
-    // every scrub tick rather than played once as an independent timeline.
-    const applySceneState = (globalProgress: number) => {
-      const step = 1 / total;
+    const applySceneState = (progress: number) => {
+      const { viewportWidth, maxScroll, scenes } = cachedMetrics;
+      if (!viewportWidth || scenes.length === 0) return;
+
+      const trackX = -maxScroll * progress;
+      const viewportCenter = viewportWidth / 2;
+
+      let closestIndex = 0;
+      let minDistance = Infinity;
+
       sceneRefs.current.forEach((scene, i) => {
-        if (!scene) return;
+        if (!scene || !scenes[i]) return;
 
-        const center = i * step + step / 2;
-        // Distance from this project's center, normalized so 0 = fully
-        // active, 1 = one full window away (fully settled neighbor state).
-        const distance = Math.abs(globalProgress - center) / step;
-        const settleAmount = 1 - mapRange(distance, 0, 1); // 1 at center, 0 one window away
+        const metrics = scenes[i];
+        const sceneCenterInViewport = metrics.left + trackX + metrics.width / 2;
+        const distanceFromCenter = Math.abs(sceneCenterInViewport - viewportCenter);
+        
+        // Track the closest scene for activeIndex
+        if (distanceFromCenter < minDistance) {
+          minDistance = distanceFromCenter;
+          closestIndex = i;
+        }
+
+        // Distance from this project's center, normalized so 0 = fully active, 1 = one full window away.
+        // We use metrics.width as the "window" size since the scenes are adjacent.
+        const normalizedDistance = distanceFromCenter / metrics.width;
+        const settleAmount = 1 - Math.max(0, Math.min(1, normalizedDistance));
 
         const mask = scene.querySelector<HTMLElement>("[data-fw-mask]");
 
@@ -127,10 +140,6 @@ export function FeaturedWorkSection() {
           return;
         }
 
-        // Scene-level dominance: current scene reads at full strength,
-        // neighbors recede but never fully vanish (keeps the "next
-        // project" glimpse and the "previous project stays present"
-        // feel from the brief) — never below a readable floor.
         const sceneOpacity = 0.28 + settleAmount * 0.72;
         gsap.set(scene, { opacity: sceneOpacity });
 
@@ -138,26 +147,12 @@ export function FeaturedWorkSection() {
         if (imageWrap) {
           gsap.set(imageWrap, {
             scale: 0.94 + settleAmount * 0.06,
-            x: (1 - settleAmount) * (globalProgress < center ? 24 : -24),
+            x: (1 - settleAmount) * (sceneCenterInViewport < viewportCenter ? -24 : 24),
           });
         }
 
-        // Mask reveal: its own dedicated node (see project-scene.tsx),
-        // driven by the same settleAmount so it opens/closes in lockstep
-        // with everything else — set via plain style.clipPath rather
-        // than gsap.set, since clip-path polygons aren't one of GSAP's
-        // optimized CSS properties and a direct style write is cheaper
-        // here than routing it through GSAP's property-parsing. The clip
-        // path's own internal pacing (see buildMaskClipPath) gives the
-        // crack -> major reveal -> settle rhythm, not linear settleAmount.
         if (mask) mask.style.clipPath = buildMaskClipPath(settleAmount);
 
-        // Photo travel: the image itself drifts in and settles as the
-        // crop opens — same settleAmount input as the mask so the two
-        // stay perfectly in lockstep at every scroll tick (forward,
-        // reverse, jump, or stopped mid-scroll), just reading as "the
-        // photograph sliding into place" rather than a static image
-        // sitting behind a moving crop.
         const photo = scene.querySelector("[data-fw-photo]");
         if (photo) {
           gsap.set(photo, {
@@ -175,68 +170,127 @@ export function FeaturedWorkSection() {
           y: (1 - settleAmount) * 14,
         });
       });
+
+      // Update React state safely (if it changed)
+      setActiveIndex((prev) => (prev !== closestIndex ? closestIndex : prev));
+    };
+
+    const updateMetrics = () => {
+      cachedMetrics.viewportWidth = document.documentElement.clientWidth;
+      cachedMetrics.maxScroll = getScrollAmount();
+      cachedMetrics.scenes = sceneRefs.current.map((scene) => {
+        if (!scene) return { left: 0, width: 0 };
+        return { left: scene.offsetLeft, width: scene.offsetWidth };
+      });
     };
 
     // Prime the first frame before any scroll happens so Project 01
     // renders already-settled, not mid-entrance.
+    // Cache initial metrics and prime the first frame
+    updateMetrics();
     applySceneState(0);
-    gsap.set(track, { x: 0, force3D: true });
 
-    createScrollTriggerRef.current = () => {
-      ScrollTrigger.create({
-        trigger: sectionRef.current,
-        start: "top top",
-        // end is a function so GSAP re-evaluates it on every refresh().
-        // clientWidth excludes the scrollbar (innerWidth includes it),
-        // preventing a 15-17px under-count that was also trimming the range.
-        end: () => `+=${getScrollAmount()}`,
-        pin: true,
-        scrub: 0.6,
-        invalidateOnRefresh: true,
-        onRefresh: (self) => {
-          // Re-prime scene state AND reset track to the correct x position
-          // for the current progress so there's no visible jump after refresh.
-          gsap.set(track, { x: -getScrollAmount() * self.progress, force3D: true });
-          applySceneState(self.progress);
-        },
-        onUpdate: (self) => {
-          // Fresh measurement on every tick — this is the key fix.
-          // getScrollAmount() reads track.scrollWidth which the browser
-          // always has correct by the time the user is actually scrolling.
-          gsap.set(track, { x: -getScrollAmount() * self.progress, force3D: true });
-          applySceneState(self.progress);
-          // Same window model as applySceneState: project i owns the
-          // range [i/total, (i+1)/total), so the displayed index always
-          // matches whichever scene is actually dominant on screen.
-          const index = Math.min(total - 1, Math.floor(self.progress * total));
-          setActiveIndex(index);
-        },
-      });
-    };
+    // The pin (and the pin-spacer GSAP inserts to reserve the horizontal
+    // scroll distance) must be created HERE, synchronously on mount — not
+    // deferred until after the preloader. A previous version deferred this
+    // via onPreloaderDone + a 500ms timeout (~2-3s after page load). If a
+    // user scrolled during that window, Featured Work still existed at its
+    // short natural (unpinned) height; the instant the deferred pin fired,
+    // GSAP inserted a multi-thousand-px spacer at its position, shifting
+    // every section below it down without adjusting the user's current
+    // scroll position — landing them inside the newly-created, visually
+    // empty spacer (page background showing through) until they scrolled
+    // far enough to reach the real pinned content again. That was the
+    // "Featured Work disappears into a blank dark area" bug. Creating the
+    // pin immediately reserves the correct height from first paint, before
+    // any scroll can happen, so there's nothing to shift into later.
+    //
+    // 1. The Tween: horizontally translates the track.
+    // Using function-based values and invalidateOnRefresh ensures
+    // GSAP recalculates the exact distance whenever ScrollTrigger refreshes.
+    const tween = gsap.to(track, {
+      x: () => -getScrollAmount(),
+      ease: "none",
+    });
+
+    // 2. The ScrollTrigger: pins the section and scrubs the tween.
+    ScrollTrigger.create({
+      trigger: sectionRef.current,
+      start: "top top",
+      end: () => `+=${getScrollAmount()}`,
+      pin: true,
+      animation: tween,
+      scrub: 0.6,
+      invalidateOnRefresh: true,
+      onRefresh: (self) => {
+        updateMetrics();
+        applySceneState(self.progress);
+      },
+      onUpdate: (self) => {
+        applySceneState(self.progress);
+      },
+    });
+
+    // GSAP automatically handles window resize refreshes on its own.
   }, { scope: sectionRef });
 
-  // A plain effect (not useGSAP) so the subscription has real,
-  // React-managed cleanup — see the comment on createScrollTriggerRef.
+  // Once the preloader has fully left (and any preloader-gated entrance
+  // animations elsewhere have run), fonts/images may have shifted layout —
+  // RE-MEASURE the already-created pin in place via refresh(), never
+  // re-create it. refresh() recalculates start/end without touching the
+  // user's current scroll position, so it can't reproduce the blank-area
+  // bug a re-created pin would.
   useEffect(() => {
     return onPreloaderDone(() => {
-      // The 1000ms delay ensures the Hero entrance is done before we do
-      // the layout measurement. However that's still not enough on slower
-      // machines/connections because Next.js Image components (which are
-      // all in this track) may not have painted their final sizes yet.
-      // We create the ScrollTrigger first, then call ScrollTrigger.refresh()
-      // a further 400ms later so the scrub end-distance is re-calculated
-      // against the fully-rendered, fully-settled DOM. This is the root
-      // cause of the intermittent "can't scroll past project 3" bug:
-      // the first measurement was producing a scrollWidth that was 0-200px
-      // too short, cutting the pin range short.
-      setTimeout(() => {
-        createScrollTriggerRef.current?.();
-        // Second pass: re-measure after images have decoded and laid out.
-        setTimeout(() => {
-          ScrollTrigger.refresh();
-        }, 400);
-      }, 1000);
+      const timer = setTimeout(() => {
+        ScrollTrigger.refresh();
+      }, 500);
+      return () => clearTimeout(timer);
     });
+  }, []);
+
+  // ROOT CAUSE of "scroll glitches whenever project data changes": the
+  // pin above is created exactly once on mount (useGSAP has no
+  // dependency array, so it never re-runs when featuredProjects changes).
+  // Its scroll range is captured via function-based values that are only
+  // RE-EVALUATED when something calls ScrollTrigger.refresh() — and
+  // nothing was tied to the track's own content actually changing.
+  // scene width is fixed (vw-based, not content-driven), so the ONLY
+  // thing that changes track.scrollWidth is the number of scenes —
+  // meaning this one measurement is exactly the DOM-derived signal that
+  // captures "project data changed" without ever hardcoding a count.
+  //
+  // A previous attempt at a ResizeObserver here caused an infinite
+  // refresh loop (see git history) — that happened because it called
+  // refresh() unconditionally on every callback firing, and refresh()
+  // itself can transiently reflow enough to re-trigger the observer.
+  // This version is safe because it (a) compares against the last known
+  // width and bails out on no-op/sub-pixel changes, and (b) debounces
+  // the actual refresh call, so a burst of resize notifications
+  // collapses into a single refresh instead of a cascade.
+  useEffect(() => {
+    const track = trackRef.current;
+    if (!track || typeof ResizeObserver === "undefined") return;
+
+    let lastWidth = track.scrollWidth;
+    let debounceTimer: ReturnType<typeof setTimeout> | undefined;
+
+    const observer = new ResizeObserver(() => {
+      const newWidth = track.scrollWidth;
+      if (Math.abs(newWidth - lastWidth) < 2) return;
+      lastWidth = newWidth;
+
+      if (debounceTimer) clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(() => {
+        ScrollTrigger.refresh();
+      }, 200);
+    });
+
+    observer.observe(track);
+    return () => {
+      observer.disconnect();
+      if (debounceTimer) clearTimeout(debounceTimer);
+    };
   }, []);
 
   // Mobile: the track is a native scroll-snap carousel, so track the

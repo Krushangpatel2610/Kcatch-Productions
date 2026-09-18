@@ -2,7 +2,8 @@
 // "OUR FAMILY" client logo grid.
 // Paper section with client logo placeholders.
 
-import { CLIENTS, FAMILY_SECTION } from "@/content/site";
+import Image from "next/image";
+import { FAMILY_BRANDS, FAMILY_SECTION } from "@/content/site";
 import { PaperSection } from "@/components/graphics/paper-section";
 import { HandwrittenNote } from "@/components/graphics/handwritten-note";
 import { Reveal } from "@/components/motion/reveal";
@@ -43,21 +44,42 @@ export function FamilySection() {
           role="list"
           aria-label="KCATCH clients"
         >
-          {CLIENTS.map((client, i) => (
-            <Reveal key={client.id} direction="up" delay={i * 0.05}>
+          {FAMILY_BRANDS.map((brand, i) => (
+            // Capped, not i * 0.05 uncapped: with 35 brands that was up to
+            // 1.7s of extra delay before the LAST tile even started its
+            // 0.7s reveal (~2.4s total) — the section's own grid/heading
+            // structure was already visible immediately, but individual
+            // tiles kept trickling in long after, reading as "still empty"
+            // well after the section had actually loaded. The stagger
+            // "wave" feel is preserved for the first ~10 tiles; it just
+            // doesn't keep growing for all 35.
+            <Reveal key={brand.id} direction="up" delay={Math.min(i * 0.03, 0.3)}>
               <div
                 className="relative flex items-center justify-center h-16 md:h-20 border-b border-kc-black/10 pb-4 opacity-80 hover:opacity-100 transition-opacity duration-300"
                 role="listitem"
-                title={client.name}
+                title={brand.name}
               >
-                {/* TODO: replace with approved client logo — {client.name} */}
-                <div
-                  className="font-display text-kc-black uppercase tracking-wide text-center leading-none"
-                  style={{ fontSize: "clamp(1.1rem, 2.2vw, 1.6rem)" }}
-                  aria-label={client.alt}
-                >
-                  {client.name}
-                </div>
+                {brand.logo ? (
+                  // Real logo asset — natural aspect ratio, never stretched/cropped.
+                  <Image
+                    src={brand.logo}
+                    alt={brand.alt}
+                    width={160}
+                    height={64}
+                    className="max-h-12 md:max-h-16 w-auto h-auto object-contain"
+                  />
+                ) : (
+                  // No approved logo asset yet for this brand — same
+                  // placeholder-name treatment the section already used
+                  // before this brand list was expanded.
+                  <div
+                    className="font-display text-kc-black uppercase tracking-wide text-center leading-none"
+                    style={{ fontSize: "clamp(1.1rem, 2.2vw, 1.6rem)" }}
+                    aria-label={brand.alt}
+                  >
+                    {brand.name}
+                  </div>
+                )}
               </div>
             </Reveal>
           ))}

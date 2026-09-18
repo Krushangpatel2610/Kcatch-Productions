@@ -17,8 +17,11 @@
 // harmful on a device with no real pointer.
 
 import { useEffect, useRef, useState } from "react";
+import Image from "next/image";
 import gsap from "gsap";
 import { prefersReducedMotion } from "@/lib/motion/reduced-motion";
+
+const CURSOR_IMAGE_SRC = "/Images/logo/KcatchMedia Lm2.png";
 
 type CursorState = "default" | "view" | "play" | "drag";
 
@@ -123,22 +126,40 @@ export function CustomCursor() {
   return (
     <div
       ref={dotRef}
-      className="fixed top-0 left-0 z-[90] pointer-events-none -translate-x-1/2 -translate-y-1/2 mix-blend-difference"
+      className="fixed top-0 left-0 z-[90] pointer-events-none -translate-x-1/2 -translate-y-1/2"
       aria-hidden="true"
     >
-      <div
-        className="flex items-center justify-center rounded-full bg-kc-white transition-[width,height] duration-300 ease-out"
-        style={{
-          width: isLabeled ? 64 : 10,
-          height: isLabeled ? 64 : 10,
-        }}
-      >
-        {isLabeled && (
+      {isLabeled ? (
+        // Labeled hover state — unchanged existing interaction/rendering:
+        // a solid white pill with the VIEW/PLAY/DRAG text, still
+        // difference-blended exactly as before.
+        <div
+          className="flex items-center justify-center rounded-full bg-kc-white mix-blend-difference transition-[width,height] duration-300 ease-out"
+          style={{ width: 64, height: 64 }}
+        >
           <span className="font-body text-kc-black text-[9px] font-bold uppercase tracking-widest">
             {LABELS[cursorState as Exclude<CursorState, "default">]}
           </span>
-        )}
-      </div>
+        </div>
+      ) : (
+        // Default state — the KCATCH logo mark, sized as a small cursor
+        // icon (not its full source resolution). object-contain inside a
+        // fixed box guarantees no distortion regardless of the source
+        // PNG's exact aspect ratio. No mix-blend-difference here: that
+        // mode was tuned for a plain white dot silhouette and would
+        // invert the logo's actual brand color depending on what's
+        // beneath it — the logo should render in its true colors.
+        <div className="relative w-10 h-7 transition-[width,height] duration-300 ease-out">
+          <Image
+            src={CURSOR_IMAGE_SRC}
+            alt=""
+            fill
+            sizes="40px"
+            className="object-contain"
+            priority
+          />
+        </div>
+      )}
     </div>
   );
 }

@@ -31,9 +31,14 @@ type ProjectSceneProps = {
 // ---------------------------------------------------------------------------
 // Tag chip
 // ---------------------------------------------------------------------------
-function Tag({ label }: { label: string }) {
+function Tag({ label, size = "sm" }: { label: string; size?: "sm" | "md" }) {
   return (
-    <span className="inline-flex items-center border border-kc-white/30 text-kc-white/80 font-body text-[10px] uppercase tracking-widest px-2.5 py-1">
+    <span
+      className={cn(
+        "inline-flex items-center border border-kc-white/30 text-kc-white/80 font-body uppercase tracking-widest",
+        size === "md" ? "text-xs px-3 py-1.5" : "text-[10px] px-2.5 py-1"
+      )}
+    >
       {label}
     </span>
   );
@@ -161,7 +166,11 @@ function FeaturedScene({ project, index, className }: ProjectSceneProps) {
         // clipping this scene's content on mobile.
         // Desktop (md+): unchanged — h-full flex-row scene inside the
         // pinned camera viewport.
-        "relative w-full h-auto md:h-full flex flex-col md:flex-row md:items-center gap-6 md:gap-10 py-6 md:py-0",
+        // Desktop: strict 50/50 info/image split via grid-cols-2 (gap is
+        // subtracted from the tracks automatically, so this can't drift to
+        // 60/70/80% the way flex-1 on the image side previously did).
+        // Mobile: unchanged natural-height stacked flex-col.
+        "relative w-full h-auto md:h-full flex flex-col md:grid md:grid-cols-2 md:items-center gap-6 md:gap-10 py-6 md:py-0",
         className
       )}
       data-scene={project.id}
@@ -172,34 +181,54 @@ function FeaturedScene({ project, index, className }: ProjectSceneProps) {
           of the scene). Mobile order: number, title, description, tags,
           CTA, then media below (see the mobile grid the brief calls
           for) — desktop keeps its own side-by-side composition. */}
-      <div className="relative z-10 flex flex-col md:w-[30%] lg:w-[26%] flex-shrink-0">
-        {/* Project number */}
-        <div className="flex items-center gap-3 mb-5" data-fw-number>
-          <span className="font-display text-kc-yellow text-5xl md:text-6xl leading-none">
-            {project.number}
+      {/* min-w-0 lets this grid item shrink to its 50% track instead of
+          overflowing on long tag/description text. */}
+      {/* justify-center: with typography scaled up to properly fill the
+          50% column, this block's natural height now tracks the image
+          column's height much more closely, so centering it (rather than
+          top-flowing) keeps it visually balanced against the image at
+          any scene's actual content length instead of drifting toward
+          the top with a gap below. */}
+      <div className="relative z-10 flex flex-col min-w-0 justify-center">
+        {/* Project number — sequential position within the featured order
+            (01-07), not the shared archive `number` field (which stays
+            untouched since it also drives the /projects archive page). */}
+        <div className="flex items-center gap-4 mb-6" data-fw-number>
+          <span className="font-display text-kc-yellow text-6xl md:text-7xl leading-none">
+            {String(index + 1).padStart(2, "0")}
           </span>
-          <div className="w-8 h-[1px] bg-kc-muted/40" aria-hidden="true" />
+          <div className="w-10 h-[1px] bg-kc-muted/40" aria-hidden="true" />
         </div>
 
-        {/* Client name */}
-        <h3 className="font-display text-kc-white text-3xl md:text-4xl uppercase mb-1" data-fw-title>
+        {/* Client name — substantially larger, the dominant text element
+            in the column (kc-display for the tight leading/letter-spacing
+            treatment used elsewhere for headline-scale type). */}
+        <h3
+          className="kc-display text-kc-white"
+          style={{ fontSize: "clamp(2.75rem, 5.5vw, 4.75rem)" }}
+          data-fw-title
+        >
           {project.client}
         </h3>
         {project.subtitle && (
-          <p className="font-hand text-kc-muted text-base mb-4" data-fw-title>
+          <p className="font-hand text-kc-muted text-lg md:text-xl mt-2 mb-6" data-fw-title>
             {project.subtitle}
           </p>
         )}
+        {!project.subtitle && <div className="mb-6" />}
 
-        {/* Description */}
-        <p className="font-body text-kc-muted text-sm leading-relaxed mb-5 max-w-xs" data-fw-desc>
+        {/* Description — no more max-w-xs: that clamp was leaving most of
+            the 50% column's width empty next to the text instead of
+            using it, which read as "compressed" even though the column
+            itself was correctly sized. */}
+        <p className="font-body text-kc-muted text-base md:text-lg leading-relaxed mb-8 max-w-md" data-fw-desc>
           {project.description}
         </p>
 
         {/* Tags */}
-        <div className="flex flex-wrap gap-2 mb-6 md:mb-8" data-fw-tags>
+        <div className="flex flex-wrap gap-2.5 mb-10" data-fw-tags>
           {project.tags.map((tag) => (
-            <Tag key={tag} label={tag} />
+            <Tag key={tag} label={tag} size="md" />
           ))}
         </div>
 
@@ -207,12 +236,12 @@ function FeaturedScene({ project, index, className }: ProjectSceneProps) {
         <MagneticButton strength={8} data-fw-cta="true">
           <Link
             href={`/projects#${project.id}`}
-            className="inline-flex items-center gap-3 bg-kc-yellow text-kc-black font-body text-xs uppercase tracking-widest px-5 py-3 w-fit hover:bg-transparent hover:text-kc-yellow hover:border-kc-yellow border border-kc-yellow transition-all duration-300 group focus-visible:outline-kc-yellow"
+            className="inline-flex items-center gap-3 bg-kc-yellow text-kc-black font-body text-sm uppercase tracking-widest px-7 py-4 w-fit hover:bg-transparent hover:text-kc-yellow hover:border-kc-yellow border border-kc-yellow transition-all duration-300 group focus-visible:outline-kc-yellow"
             aria-label={`View ${project.client} project`}
           >
             VIEW PROJECT
             <ArrowRight
-              size={14}
+              size={16}
               aria-hidden="true"
               className="transition-transform group-hover:translate-x-1"
             />
@@ -233,8 +262,11 @@ function FeaturedScene({ project, index, className }: ProjectSceneProps) {
           to feel like a major visual anchor without crowding out the
           metadata above it. Desktop: unchanged flex-1 h-full sizing
           against the pinned scene's fixed height. */}
+      {/* md:w-auto (implicit 50% via grid-cols-2) replaces the previous
+          md:flex-1, which let this column grow to fill ALL remaining
+          space (~70-74%) instead of a strict 50/50 split. */}
       <div
-        className="relative w-full h-[32svh] min-h-[220px] max-h-[360px] md:flex-1 md:h-full md:w-auto md:min-h-0 md:max-h-none flex items-center justify-center"
+        className="relative w-full h-[32svh] min-h-[220px] max-h-[360px] md:h-full md:min-h-0 md:max-h-none min-w-0 flex items-center justify-center"
         data-fw-image-wrap
       >
         <div
@@ -266,10 +298,10 @@ function FeaturedScene({ project, index, className }: ProjectSceneProps) {
                 <KcatchImage
                   src={project.heroImage}
                   alt={`${project.client} campaign visual`}
-                  className="absolute inset-0"
+                  className="absolute inset-0 object-cover"
                   fill
                   priority={index < 2}
-                  sizes="(min-width: 1024px) 60vw, 100vw"
+                  sizes="(min-width: 1024px) 50vw, 100vw"
                   placeholderLabel={project.number}
                 />
               </div>

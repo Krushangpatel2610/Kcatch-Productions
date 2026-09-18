@@ -98,10 +98,12 @@ export function TapeStrip({
     yellow: "bg-kc-yellow text-kc-black",
     white: "bg-kc-white text-kc-black",
     dark: "bg-kc-black text-kc-white",
-    checker: "bg-white",
+    // Matches kcatch-media's checker coloring (paper/navy-deep), not
+    // literal black/white.
+    checker: "bg-kc-paper",
   }[variant];
 
-  const checkerBgImage = `repeating-conic-gradient(#000 0% 25%, transparent 0% 50%)`;
+  const checkerBgImage = `repeating-conic-gradient(var(--kc-black) 0% 25%, transparent 0% 50%)`;
 
   // ── Text marquee ──────────────────────────────────────────────────────────
   useEffect(() => {

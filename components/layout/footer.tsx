@@ -22,7 +22,7 @@ export function Footer() {
             // Upright checker squares — same verified formula as
             // components/graphics/checkerboard.tsx, not the diagonal
             // diamond pattern this used before.
-            backgroundImage: "repeating-conic-gradient(#fff000 0% 25%, #000 0% 50%)",
+            backgroundImage: "repeating-conic-gradient(#ffe600 0% 25%, #000 0% 50%)",
             backgroundSize: "5px 5px",
           }}
         />

@@ -1,22 +1,24 @@
 import type { Metadata } from "next";
-import { Bebas_Neue, Inter, Caveat } from "next/font/google";
+import { Anton, Archivo, Caveat } from "next/font/google";
 import "./globals.css";
 import { SmoothScrollProvider } from "@/components/motion/smooth-scroll-provider";
 import { Preloader } from "@/components/motion/preloader";
 import { CustomCursor } from "@/components/motion/custom-cursor";
 
 // ---------------------------------------------------------------------------
-// Font loading — tokenized so they can be swapped for official KCATCH fonts
+// Font loading — matches kcatch-media's global visual language (Anton +
+// Archivo). Caveat is kept as-is for the handwritten accent (Preloader's
+// "the damn eye." line) since kcatch-media has no equivalent hand font.
 // ---------------------------------------------------------------------------
-const bebasNeue = Bebas_Neue({
+const anton = Anton({
   weight: "400",
-  variable: "--font-bebas",
+  variable: "--font-anton",
   subsets: ["latin"],
   display: "swap",
 });
 
-const inter = Inter({
-  variable: "--font-inter",
+const archivo = Archivo({
+  variable: "--font-archivo",
   subsets: ["latin"],
   display: "swap",
 });
@@ -53,9 +55,18 @@ export default function RootLayout({
     <html
       lang="en"
       suppressHydrationWarning
-      className={`${bebasNeue.variable} ${inter.variable} ${caveat.variable} h-full`}
+      className={`${anton.variable} ${archivo.variable} ${caveat.variable} h-full`}
     >
-      <body suppressHydrationWarning className="bg-kc-black text-kc-white antialiased overflow-x-hidden">
+      {/* overflow-x-clip, not overflow-x-hidden: setting only one overflow
+          axis makes the browser auto-compute the other axis to `auto`,
+          silently turning <body> into its own scroll container. That then
+          becomes the "nearest scrolling ancestor" for any position:sticky
+          descendant (e.g. HeroSection's inner sticky wrapper), which can
+          make its stick/release point diverge from the true viewport and
+          show up as an extra gap before the next section. `clip` blocks
+          horizontal overflow the same way without establishing a scroll
+          container. */}
+      <body suppressHydrationWarning className="bg-kc-black text-kc-white antialiased overflow-x-clip">
         {/* Skip to main content link for accessibility */}
         <a
           href="#main-content"

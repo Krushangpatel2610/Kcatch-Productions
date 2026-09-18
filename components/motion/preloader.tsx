@@ -103,9 +103,29 @@ export function Preloader() {
 
       document.body.style.overflow = "hidden";
 
+      // FAILSAFE: the only thing that clears the lock above was
+      // previously the timeline's own onComplete — if the timeline is
+      // ever interrupted, reverted (useGSAP calls context.revert() on
+      // any dependency change or unmount, which does NOT know about
+      // this plain document.body write since it's not a GSAP-tracked
+      // property), or throws before finishing, native scrolling stayed
+      // permanently disabled with no recovery path. This timer
+      // guarantees the lock clears within a bounded time regardless of
+      // whether the animation itself ever completes; it's a no-op in
+      // the normal case since onComplete already clears the lock (and
+      // calls this same idempotent unlock) well before it fires.
+      const unlock = () => {
+        document.body.style.overflow = "";
+      };
+      const failsafeTimer = window.setTimeout(() => {
+        unlock();
+        markPreloaderDone();
+      }, 3000); // comfortably longer than the ~1.3s real timeline
+
       const tl = gsap.timeline({
         onComplete: () => {
-          document.body.style.overflow = "";
+          window.clearTimeout(failsafeTimer);
+          unlock();
           setPhase("done");
         },
       });
@@ -175,6 +195,16 @@ export function Preloader() {
         // don't compete with the heavy preloader transform on the main thread,
         // resolving the stuttering/lagging issue.
         .call(markPreloaderDone);
+
+      // Cleanup: fires on unmount AND on any dependency change (i.e.
+      // every time this callback re-runs, useGSAP reverts the PREVIOUS
+      // invocation first) — guarantees the lock/timer from THIS
+      // invocation can never outlive it, independent of whether the
+      // timeline itself ever reached onComplete.
+      return () => {
+        window.clearTimeout(failsafeTimer);
+        unlock();
+      };
     },
     { dependencies: [phase], scope: rootRef }
   );
@@ -239,7 +269,7 @@ export function Preloader() {
               // Upright checker squares — same verified formula as
               // components/graphics/checkerboard.tsx, not the diagonal
               // diamond pattern this used before.
-              backgroundImage: "repeating-conic-gradient(#fff000 0% 25%, #000 0% 50%)",
+              backgroundImage: "repeating-conic-gradient(#ffe600 0% 25%, #000 0% 50%)",
               backgroundSize: "4px 4px",
               transform: "scale(0) rotate(-8deg)",
             }}

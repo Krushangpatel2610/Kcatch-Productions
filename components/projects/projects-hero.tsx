@@ -9,30 +9,30 @@ import { HandwrittenNote } from "@/components/graphics/handwritten-note";
 import { Reveal } from "@/components/motion/reveal";
 import { MaskText } from "@/components/motion/mask-text";
 import { Container } from "@/components/layout/container";
+import Image from "next/image";
 
 export function ProjectsHero() {
   return (
     <section
-      className="relative overflow-hidden bg-kc-black pt-28 pb-0"
+      className="relative overflow-hidden pt-28 pb-0"
       aria-label="Projects hero"
       data-section="projects-hero"
     >
-      {/* Background image slot */}
-      {/* TODO: replace with approved camera/studio photography */}
       <div
-        className="absolute inset-0 -z-10"
+        className="absolute inset-0"
         aria-hidden="true"
       >
-        <div
-          className="w-full h-full"
-          style={{
-            background:
-              "linear-gradient(135deg, #05070B 0%, #0a0f1e 40%, #1a1f3a 70%, #05070B 100%)",
-          }}
+        <Image
+          src="/Images/BG Images/ProjectsPageBg.png"
+          alt="Projects background"
+          fill
+          priority
+          sizes="100vw"
+          className="object-cover object-center opacity-70"
         />
       </div>
       <div
-        className="absolute inset-0 -z-10"
+        className="absolute inset-0"
         style={{
           background:
             "linear-gradient(to right, rgba(5,7,11,0.9) 0%, rgba(5,7,11,0.5) 60%, transparent 100%)",
@@ -40,7 +40,7 @@ export function ProjectsHero() {
         aria-hidden="true"
       />
 
-      <Container className="pb-12">
+      <Container className="relative z-10 pb-12">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-end">
           {/* Left: headline */}
           <div>

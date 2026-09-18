@@ -45,6 +45,7 @@
 "use client";
 
 import { useRef } from "react";
+import Image from "next/image";
 import gsap from "gsap";
 import ScrollTrigger from "gsap/ScrollTrigger";
 import { useGSAP } from "@gsap/react";
@@ -103,7 +104,7 @@ export function TornPaperEdge({
 }: TornPaperEdgeProps) {
   const src = variant === "bottom" ? BOTTOM_SRC : TOP_SRC;
   const wrapRef = useRef<HTMLDivElement>(null);
-  const textureRef = useRef<HTMLDivElement>(null);
+  const textureRef = useRef<HTMLImageElement>(null);
 
   useGSAP(
     () => {
@@ -141,16 +142,25 @@ export function TornPaperEdge({
       {/* Texture layer — the only thing that ever moves. Sized/positioned
           to exactly fill the box at rest; the small TRAVEL_PX drift
           above can only ever expose the backing color (this div's
-          parent background), never a page-level gap. */}
-      <div
+          parent background), never a page-level gap.
+          next/image (not a raw CSS background-image): this box is only
+          clamp(24px,3.6vw,48px) tall, but the source PNGs are ~380-650KB
+          at their full ~2160px width — a CSS background-image downloads
+          that full, unoptimized file with no lazy-loading and no
+          responsive resizing. next/image's optimizer serves a properly
+          sized/compressed version instead, matching what this tiny box
+          can actually display, with real lazy-loading. object-fill
+          reproduces the previous "100% 100%" non-uniform stretch exactly
+          (the tear's position depends on stretching to the box, not
+          cropping via object-cover). */}
+      <Image
         ref={textureRef}
-        className="absolute inset-0"
-        style={{
-          backgroundImage: `url(${src})`,
-          backgroundRepeat: "no-repeat",
-          backgroundSize: "100% 100%",
-          backgroundPosition: "center",
-        }}
+        src={src}
+        alt=""
+        fill
+        sizes="100vw"
+        loading="lazy"
+        className="object-fill"
       />
     </div>
   );

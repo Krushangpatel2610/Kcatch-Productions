@@ -12,8 +12,10 @@ type ContainerProps = {
 
 export function Container({ children, className, as: Tag = "div" }: ContainerProps) {
   const Comp = Tag as React.ElementType;
+  // Max-width/gutters match kcatch-media's container convention
+  // (mx-auto max-w-[1600px] px-5 md:px-10).
   return (
-    <Comp className={cn("max-w-screen-xl mx-auto px-6 md:px-10", className)}>
+    <Comp className={cn("max-w-[1600px] mx-auto px-5 md:px-10", className)}>
       {children}
     </Comp>
   );

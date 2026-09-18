@@ -4,10 +4,8 @@
 
 import type { Metadata } from "next";
 import { SiteShell } from "@/components/layout/site-shell";
-import { ContactHero } from "@/components/contact/contact-hero";
 import { ContactForm } from "@/components/contact/contact-form";
 import { OfficeList } from "@/components/contact/office-list";
-import { ContactCTA } from "@/components/contact/contact-cta";
 import { CONTACT_FORM } from "@/content/contact";
 import { PaperSection } from "@/components/graphics/paper-section";
 import { HandwrittenNote } from "@/components/graphics/handwritten-note";
@@ -24,10 +22,12 @@ export const metadata: Metadata = {
 export default function ContactPage() {
   return (
     <SiteShell>
-      {/* 1. Hero */}
-      <ContactHero />
-
-      {/* 2. Form + offices (paper section) */}
+      {/* Form + offices (paper section) — the previous "HEY THERE! /
+          LET'S MAKE THEM LOOK." hero and the closing "CREATIVE PEOPLE
+          ALWAYS FIND A WAY." CTA section have been removed from this
+          page's rendering per request; PaperSection's own top edge/
+          padding already clears the fixed nav on its own, so no extra
+          spacing was needed here. */}
       <PaperSection
         aria-label="Contact form and office details"
         data-section="contact-body"
@@ -73,9 +73,6 @@ export default function ContactPage() {
           </div>
         </Container>
       </PaperSection>
-
-      {/* 3. Closing CTA */}
-      <ContactCTA />
     </SiteShell>
   );
 }

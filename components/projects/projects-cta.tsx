@@ -13,7 +13,7 @@ export function ProjectsCTA() {
       data-section="projects-cta"
     >
       {/* Checkerboard top */}
-      <Checkerboard height="sm" density="tight" colorA="#fff000" colorB="#000000" />
+      <Checkerboard height="sm" density="tight" colorA="var(--kc-yellow)" colorB="var(--kc-black)" />
 
       <Container className="py-16 md:py-20">
         <div className="flex flex-col md:flex-row items-center md:items-end justify-between gap-8">

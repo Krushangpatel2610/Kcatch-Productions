@@ -8,24 +8,30 @@
    KCATCH DESIGN TOKENS
    =================================================== */
 :root {
-  /* KCATCH Brand Colors */
+  /* KCATCH Brand Colors
+     Re-hued to match kcatch-media's (Project B) visual language, keeping
+     A's own token names so every consumer updates automatically.
+     --kc-blue is intentionally NOT re-hued to B's dark navy: it's used as
+     a legible accent text/icon color in capabilities-section.tsx and
+     office-list.tsx, and B has no equivalent light accent — swapping it
+     to a near-background navy would break contrast there. */
   --kc-blue: #283474;
-  --kc-yellow: #fff000;
-  --kc-black: #05070b;
+  --kc-yellow: #ffe600;
+  --kc-black: #050b20;
   --kc-white: #ffffff;
-  --kc-paper: #f4f1e8;
+  --kc-paper: #f3f1e9;
   --kc-muted: #b8bdca;
   --kc-line: rgba(255, 255, 255, 0.18);
   --kc-line-dark: rgba(255, 255, 255, 0.08);
 
   /* Semantic canvas */
-  --kc-canvas: #05070b;
-  --kc-surface: #0d1117;
-  --kc-surface-2: #111827;
+  --kc-canvas: #050b20;
+  --kc-surface: #0a1533;
+  --kc-surface-2: #0e1c44;
 
   /* Typography tokens */
-  --font-display: var(--font-bebas), "Arial Narrow", "Impact", sans-serif;
-  --font-body: var(--font-inter), "Arial", sans-serif;
+  --font-display: var(--font-anton), "Arial Black", sans-serif;
+  --font-body: var(--font-archivo), system-ui, sans-serif;
   --font-hand: var(--font-caveat), "Comic Sans MS", cursive;
 
   /* Type scale */
@@ -137,15 +143,20 @@
     font-family: var(--font-body);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    /* Prevent horizontal overflow */
-    overflow-x: hidden;
+    /* Prevent horizontal overflow. `clip`, not `hidden`: setting only the
+       x-axis with `hidden` makes the browser auto-compute overflow-y to
+       `auto`, silently turning html/body into their own scroll container
+       and shifting the "nearest scrolling ancestor" that position:sticky
+       descendants (e.g. HeroSection) resolve against away from the real
+       viewport — `clip` blocks horizontal overflow without that side effect. */
+    overflow-x: clip;
   }
 
   body {
     background-color: var(--kc-black);
     color: var(--kc-white);
     min-height: 100vh;
-    overflow-x: hidden;
+    overflow-x: clip;
   }
 
   /* Focus styles */
@@ -177,8 +188,37 @@
    TYPOGRAPHY UTILITIES
    =================================================== */
 @layer utilities {
+  /* Letter-spacing/line-height match kcatch-media's .font-display exactly */
   .font-display {
     font-family: var(--font-display);
+    letter-spacing: -0.02em;
+    line-height: 0.86;
+  }
+
+  /* Fluid oversized display type — matches kcatch-media's .kc-display */
+  .kc-display {
+    font-family: var(--font-display);
+    line-height: 0.82;
+    letter-spacing: -0.02em;
+    text-transform: uppercase;
+  }
+
+  /* Outlined/hollow headline text — matches kcatch-media's .text-stroke(-yellow) */
+  .text-stroke {
+    color: transparent;
+    -webkit-text-stroke: 1.5px var(--kc-paper);
+  }
+  .text-stroke-yellow {
+    color: transparent;
+    -webkit-text-stroke: 1.5px var(--kc-yellow);
+  }
+  @media (min-width: 768px) {
+    .text-stroke {
+      -webkit-text-stroke-width: 2px;
+    }
+    .text-stroke-yellow {
+      -webkit-text-stroke-width: 2px;
+    }
   }
 
   .font-body {
@@ -295,19 +335,31 @@
 /* ===================================================
    CHECKERBOARD PATTERN
    =================================================== */
+/* Tile size/coloring match kcatch-media's .checker-sm exactly (14px, navy-deep/paper) */
 .kc-checker {
   background-image:
     linear-gradient(45deg, var(--kc-black) 25%, transparent 25%),
     linear-gradient(-45deg, var(--kc-black) 25%, transparent 25%),
     linear-gradient(45deg, transparent 75%, var(--kc-black) 75%),
     linear-gradient(-45deg, transparent 75%, var(--kc-black) 75%);
-  background-size: 12px 12px;
+  background-size: 14px 14px;
   background-position:
     0 0,
-    0 6px,
-    6px -6px,
-    -6px 0;
-  background-color: var(--kc-white);
+    0 7px,
+    7px -7px,
+    -7px 0;
+  background-color: var(--kc-paper);
+}
+
+/* ===================================================
+   CAUTION TAPE — matches kcatch-media's .caution-tape exactly
+   =================================================== */
+.caution-tape {
+  background: repeating-linear-gradient(
+    -45deg,
+    var(--kc-yellow) 0 32px,
+    var(--kc-black) 32px 64px
+  );
 }
 
 /* ===================================================
@@ -328,6 +380,60 @@
 
 @media (prefers-reduced-motion: reduce) {
   .kc-tape-marquee {
+    animation: none;
+  }
+}
+
+/* ===================================================
+   MIGRATED FROM kcatch-media (Project B) — Orbit + Marquee ONLY.
+   Additive/isolated: does not modify any --kc-* token, font, or
+   existing animation infrastructure defined above this block.
+   =================================================== */
+
+/* Orbit section ring rotation (components/home/orbit-section.tsx).
+   Animation is applied inline per-node (direction/duration differ per
+   ring), so reduced-motion is enforced here via attribute selector
+   with !important since it must override those inline styles. */
+@keyframes kc-orbit-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes kc-orbit-spin-reverse {
+  to {
+    transform: rotate(-360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-kc-orbit-spin] {
+    animation: none !important;
+  }
+}
+
+/* Infinite marquee ticker (components/graphics/marquee-strip.tsx) */
+@keyframes kc-marquee-scroll {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+.kc-marquee-track {
+  display: flex;
+  width: max-content;
+  animation: kc-marquee-scroll var(--kc-marquee-duration, 28s) linear infinite;
+}
+
+.kc-marquee-track.kc-marquee-reverse {
+  animation-direction: reverse;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .kc-marquee-track {
     animation: none;
   }
 }

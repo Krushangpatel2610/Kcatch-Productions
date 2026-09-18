@@ -8,8 +8,13 @@ import { HeroSection } from "@/components/home/hero-section";
 import { FeaturedWorkSection } from "@/components/home/featured-work-section";
 import { CapabilitiesSection } from "@/components/home/capabilities-section";
 import { AboutSection } from "@/components/home/about-section";
+import { OrbitSection } from "@/components/home/orbit-section";
 import { FamilySection } from "@/components/home/family-section";
-import { FinalCTASection } from "@/components/home/final-cta-section";
+// FinalCTASection ("Ready When You Are" / "LET'S MAKE THEM LOOK.") is
+// intentionally NOT rendered on the Home page right now — kept available
+// for later use. The component/file itself is untouched; only its Home
+// page usage below is commented out.
+// import { FinalCTASection } from "@/components/home/final-cta-section";
 
 export const metadata: Metadata = {
   title: "KCATCH Media | KCATCH THE DAMN EYE",
@@ -21,33 +26,32 @@ export default function HomePage() {
   return (
     <SiteShell>
       {/*
-        Section order per PRD.md:
-        1. Hero
-        2. Featured Work (IMMEDIATELY after hero)
-        3. Capabilities / What We KCATCH
-        4. About / Visibility
-        5. Our Family
-        6. Final CTA
+        Section order (per current instructions):
+        1. Hero (kcatch-media design/behavior)
+        2. Orbit (kcatch-media)
+        3. Featured Work / Work Done (Project A — own pinned ScrollTrigger,
+           self-contained, independent of what precedes it)
+        4. What We Do / Capabilities (Project A)
+        5. Visibility Isn't Luck / About (Project A)
+        6. Our Family (Project A)
+        7. Everything else (unchanged, kept below — not yet migrated/decided)
 
-        Hero → Featured Work uses a sticky/overlap technique so Featured
-        Work visually slides up and over the Hero instead of the two
-        sections simply stacking — the Hero stays pinned in place (native
-        CSS sticky, no extra ScrollTrigger) while Featured Work's own
-        (already-pinned) section scrolls up to cover it. z-index keeps
-        Featured Work above the Hero once it arrives.
+        The previous Hero+FeaturedWork sticky/overlap wrapper is intentionally
+        removed here: it relied on Hero and FeaturedWork being immediately
+        adjacent (Hero pinned via an outer sticky div while FeaturedWork slid
+        over it). Orbit now sits between them, and HeroSection itself pins
+        internally (h-[260vh] + its own sticky inner wrapper) per B's design,
+        so the outer wrapper is no longer applicable — FeaturedWorkSection
+        still pins itself via its own ScrollTrigger regardless of what's
+        above it, so its sliding behavior is unaffected.
       */}
-      <div className="relative">
-        <div className="sticky top-0 z-0">
-          <HeroSection />
-        </div>
-        <div className="relative z-10">
-          <FeaturedWorkSection />
-        </div>
-      </div>
+      <HeroSection />
+      <OrbitSection />
+      <FeaturedWorkSection />
       <CapabilitiesSection />
       <AboutSection />
       <FamilySection />
-      <FinalCTASection />
+      {/* <FinalCTASection /> — removed from Home page rendering only; see import comment above */}
     </SiteShell>
   );
 }

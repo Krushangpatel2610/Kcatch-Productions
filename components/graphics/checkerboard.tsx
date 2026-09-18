@@ -33,17 +33,21 @@ const heightMap = {
   md: "h-8",
 };
 
+// Tile sizes match kcatch-media's .checker-sm (14px) and .checker (28px);
+// "normal" is A's own in-between step, not from B.
 const sizeMap = {
-  tight: "8px",
-  normal: "12px",
-  loose: "20px",
+  tight: "14px",
+  normal: "20px",
+  loose: "28px",
 };
 
 export function Checkerboard({
   height = "sm",
   density = "normal",
-  colorA = "#ffffff",
-  colorB = "#000000",
+  // Defaults match kcatch-media's actual checker coloring (paper/navy-deep
+  // via --kc-paper/--kc-black), not literal black/white.
+  colorA = "var(--kc-paper)",
+  colorB = "var(--kc-black)",
   className,
 }: CheckerboardProps) {
   const cellSize = sizeMap[density];

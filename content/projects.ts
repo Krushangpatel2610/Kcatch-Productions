@@ -56,7 +56,7 @@ export const allProjects: Project[] = [
     heroImage: "/Images/Projects/01-Razorpay.webp",
     supportingImages: ["/projects/razorpay/supporting-01.jpg"],
     featured: true,
-    featuredOrder: 1,
+    featuredOrder: 2,
     archiveOrder: 1,
   },
   {
@@ -71,7 +71,7 @@ export const allProjects: Project[] = [
     heroImage: "/Images/Projects/02-Zee5.webp",
     supportingImages: ["/projects/zee5/supporting-01.jpg"],
     featured: true,
-    featuredOrder: 2,
+    featuredOrder: 1,
     archiveOrder: 2,
   },
   {
@@ -153,8 +153,12 @@ export const allProjects: Project[] = [
     category: "MUSIC VIDEO",
     tags: ["MUSIC", "VIDEO", "DIRECTION"],
     description: "Visuals that vibe.",
+    // Filled in from reference material — annotation was previously unset
+    // for this project (not overwriting any existing value).
+    annotation: "MUSIC VIDEO!",
     heroImage: "/Images/Projects/08-Music Video.webp",
-    featured: false,
+    featured: true,
+    featuredOrder: 6,
     archiveOrder: 8,
   },
   {
@@ -177,8 +181,12 @@ export const allProjects: Project[] = [
     category: "EDUCATION",
     tags: ["CAMPAIGN", "EDUCATION", "STORYTELLING"],
     description: "We made education fun.",
+    // Filled in from reference material — annotation was previously unset
+    // for this project (not overwriting any existing value).
+    annotation: "OH YES, WE MADE EDUCATION FUN AT HEBRON!!",
     heroImage: "/Images/Projects/10-Hebron.webp",
-    featured: false,
+    featured: true,
+    featuredOrder: 7,
     archiveOrder: 10,
   },
   {
