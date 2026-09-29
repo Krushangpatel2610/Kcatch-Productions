@@ -48,7 +48,7 @@ export function HeroSection() {
             <span className="inline-block h-2 w-2 bg-kc-yellow" />
             {HOME_HERO.eyebrow}
           </p>
-          <h1 className="kc-display text-kc-paper text-[15vw] md:text-[11vw]">
+          <h1 className="kc-display flex flex-col gap-[2vw] text-kc-paper text-[15vw] md:gap-[1.5vw] md:text-[11vw]">
             <span className="block">{HOME_HERO.headlineLine1}</span>
             <span className="block">
               {HOME_HERO.headlineLine2}{" "}
@@ -84,7 +84,10 @@ export function HeroSection() {
 
       {/* Bottom tape transition */}
       <div className="absolute bottom-0 left-0 z-30 w-full">
-        <TapeStack text={HOME_HERO.tapeText} animateIn={false} />
+        <TapeStack
+          text={`${HOME_HERO.tapeText} ★ THERE'S ALWAYS A KCATCH ★ KCATCH THE EYE`}
+          animateIn={false}
+        />
       </div>
     </section>
   );

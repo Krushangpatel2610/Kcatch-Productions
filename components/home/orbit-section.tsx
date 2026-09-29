@@ -9,7 +9,6 @@
 
 import { useState } from "react";
 import Image from "next/image";
-import Link from "next/link";
 import { featuredProjects } from "@/content/projects";
 import { CLIENTS } from "@/content/site";
 import { Reveal } from "@/components/motion/reveal";
@@ -154,41 +153,6 @@ export function OrbitSection() {
               </div>
             </div>
           </div>
-        </div>
-
-        {/* Active node detail. B's layout showed Client/Category/Service/Year;
-            Project A's project data has no `year` field, so this uses the
-            three fields that actually exist (client/category/tag) rather
-            than inventing one. */}
-        <div className="mx-auto mt-12 grid max-w-2xl gap-4 text-center sm:grid-cols-3">
-          {[
-            { k: "Client", v: active.client, href: `/projects#${active.id}` },
-            { k: "Category", v: active.category },
-            { k: "Service", v: active.tags[0] },
-          ].map((row) => (
-            <div key={row.k} className="border-t border-kc-line pt-4">
-              <p className="font-body text-[10px] font-bold uppercase tracking-[0.3em] text-kc-yellow">
-                {row.k}
-              </p>
-              {row.href ? (
-                // Same project link Featured Work exposes via its "VIEW
-                // PROJECT" CTA (/projects#<id>) — Orbit's compact layout
-                // has no room for a separate CTA, so the Client value
-                // itself carries the link instead of adding a new element.
-                <Link
-                  href={row.href}
-                  className="mt-1 block font-display text-sm uppercase text-kc-white hover:text-kc-yellow transition-colors"
-                  aria-label={`View ${row.v} project`}
-                >
-                  {row.v}
-                </Link>
-              ) : (
-                <p className="mt-1 font-display text-sm uppercase text-kc-white">
-                  {row.v}
-                </p>
-              )}
-            </div>
-          ))}
         </div>
       </Container>
     </section>

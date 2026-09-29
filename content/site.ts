@@ -62,7 +62,7 @@ export type Capability = {
 
 export const CAPABILITIES_SECTION = {
   sectionLabel: "WHAT WE DO",
-  headline: "WHAT\nWE KCATCH",
+  headline: "WHAT\nWE\nKCATCH",
   annotation:
     "We blend strategy, storytelling, design and cultural insight to create work that doesn't just sit on a feed, it moves through it.",
   cta: { label: "KNOW MORE", href: "/contact" },

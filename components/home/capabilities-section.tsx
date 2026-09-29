@@ -89,7 +89,7 @@ export function CapabilitiesSection() {
                   {CAPABILITIES_SECTION.sectionLabel}
                 </p>
                 <h2
-                  className="font-display text-kc-black uppercase leading-none"
+                  className="font-display text-kc-black uppercase leading-none flex flex-col gap-[0.15em]"
                   style={{ fontSize: "clamp(3rem, 8vw, 7rem)" }}
                 >
                   {CAPABILITIES_SECTION.headline.split("\n").map((line, i) => (

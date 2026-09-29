@@ -35,7 +35,6 @@ import { useGSAP } from "@gsap/react";
 if (typeof window !== "undefined") {
   gsap.registerPlugin(ScrollTrigger, useGSAP);
 }
-import { ArrowLeft, ArrowRight } from "lucide-react";
 import { featuredProjects } from "@/content/projects";
 import { FEATURED_WORK } from "@/content/site";
 import { ProjectScene } from "./project-scene";
@@ -325,22 +324,6 @@ export function FeaturedWorkSection() {
   // width (the track is transform-driven, never natively scrollable), so
   // activeIndex tracking lives entirely in applySceneState's onUpdate —
   // no separate scroll listener needed.
-  const goTo = (i: number) => {
-    const clamped = Math.max(0, Math.min(total - 1, i));
-    setActiveIndex(clamped);
-
-    // The pinned ScrollTrigger owns scroll position, so move the window
-    // scroll to the point in the pin range that matches this index. Same
-    // window-center formula as applySceneState/onUpdate above
-    // ((i + 0.5) / total, not i / (total - 1)) so a next/prev click lands
-    // exactly where that project is fully dominant, not partway into its
-    // neighbor's window.
-    const st = ScrollTrigger.getAll().find((t) => t.trigger === sectionRef.current);
-    if (!st) return;
-    const progress = (clamped + 0.5) / total;
-    const target = st.start + (st.end - st.start) * progress;
-    window.scrollTo({ top: target, behavior: "smooth" });
-  };
 
   return (
     <section
@@ -380,7 +363,7 @@ export function FeaturedWorkSection() {
             </p>
             <MaskText
               as="h2"
-              className="font-display text-kc-white uppercase leading-none"
+              className="font-display text-kc-white uppercase leading-none flex flex-col gap-[0.15em]"
               style={{ fontSize: "clamp(2.25rem, 5vw, 4.25rem)" }}
               lines={[FEATURED_WORK.headline1, { text: FEATURED_WORK.headline2, className: "text-kc-yellow" }]}
               stagger={0.1}
@@ -397,32 +380,11 @@ export function FeaturedWorkSection() {
             />
           </div>
 
-          {/* Right: description + nav controls */}
+          {/* Right: description */}
           <div className="lg:col-span-1 flex flex-col items-start lg:items-end gap-4">
             <p className="font-body text-kc-muted text-sm leading-relaxed max-w-xs lg:text-right">
               {FEATURED_WORK.annotation}
             </p>
-            <div className="flex items-center gap-2">
-              <span className="font-body text-[10px] uppercase tracking-widest text-kc-muted mr-2">
-                {FEATURED_WORK.scrollHint}
-              </span>
-              <button
-                onClick={() => goTo(activeIndex - 1)}
-                disabled={activeIndex === 0}
-                className="w-10 h-10 border border-kc-white/30 flex items-center justify-center text-kc-white hover:border-kc-yellow hover:text-kc-yellow transition-colors disabled:opacity-30 disabled:cursor-not-allowed focus-visible:outline-kc-yellow"
-                aria-label="Previous project"
-              >
-                <ArrowLeft size={16} aria-hidden="true" />
-              </button>
-              <button
-                onClick={() => goTo(activeIndex + 1)}
-                disabled={activeIndex === total - 1}
-                className="w-10 h-10 border border-kc-white/30 flex items-center justify-center text-kc-white hover:border-kc-yellow hover:text-kc-yellow transition-colors disabled:opacity-30 disabled:cursor-not-allowed focus-visible:outline-kc-yellow"
-                aria-label="Next project"
-              >
-                <ArrowRight size={16} aria-hidden="true" />
-              </button>
-            </div>
           </div>
         </div>
       </Container>
