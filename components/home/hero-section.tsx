@@ -50,7 +50,16 @@ export function HeroSection() {
           </p>
           <h1 className="kc-display flex flex-col gap-[2vw] text-kc-paper text-[15vw] md:gap-[1.5vw] md:text-[11vw]">
             <span className="block">{HOME_HERO.headlineLine1}</span>
-            <span className="block">
+            {/* "THE DAMN EYE" must stay a single unbroken line — at
+                text-[15vw] (line 1's size) it's too wide to fit the
+                container on narrow phones and the browser word-wraps
+                "EYE" onto its own third line. whitespace-nowrap forces
+                one line; the clamp() shrinks just this line's font-size
+                enough to actually fit that line at any mobile width
+                (measured against Container's px-5 gutter), instead of
+                overflowing/clipping. md: restores the original 11vw so
+                desktop/tablet — already correct — is untouched. */}
+            <span className="block whitespace-nowrap text-[clamp(2.25rem,11.5vw,4.5rem)] md:text-[11vw]">
               {HOME_HERO.headlineLine2}{" "}
               <span className="text-kc-yellow">{HOME_HERO.headlineLine3}</span>
             </span>
