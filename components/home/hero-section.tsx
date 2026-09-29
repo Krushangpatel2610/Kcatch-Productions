@@ -15,7 +15,7 @@ const HERO_BG_SRC = "/Images/BG Images/HeroBg.png";
 export function HeroSection() {
   return (
     <section
-      className="relative min-h-screen w-full overflow-hidden bg-kc-black"
+      className="relative min-h-[100svh] w-full overflow-hidden bg-kc-black"
       aria-label="KCATCH cinematic hero"
       data-section="hero"
     >
@@ -42,7 +42,7 @@ export function HeroSection() {
       />
 
       {/* Headline */}
-      <Container className="relative z-10 flex min-h-screen flex-col justify-center py-24">
+      <Container className="relative z-10 flex min-h-[100svh] flex-col justify-center py-24">
         <div className="max-w-3xl">
           <p className="mb-6 flex items-center gap-3 font-body text-xs font-bold uppercase tracking-[0.3em] text-kc-yellow">
             <span className="inline-block h-2 w-2 bg-kc-yellow" />
