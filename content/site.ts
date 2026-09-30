@@ -220,9 +220,8 @@ export const FOOTER = {
 };
 
 export const SOCIAL_LINKS: SocialLink[] = [
-  { platform: "Instagram", icon: "ExternalLink", href: "https://instagram.com/kcatchmedia" },
-  { platform: "LinkedIn", icon: "ExternalLink", href: "https://linkedin.com/company/kcatch" },
-  { platform: "YouTube", icon: "ExternalLink", href: "https://youtube.com/@kcatch" },
-  { platform: "X", icon: "ExternalLink", href: "https://x.com/kcatchmedia" },
-  { platform: "Behance", icon: "ExternalLink", href: "https://behance.net/kcatch" },
+  { platform: "WhatsApp", icon: "ExternalLink", href: "https://wa.me/918160483945" },
+  { platform: "Email", icon: "ExternalLink", href: "mailto:sampark.kcatch@gmail.com" },
+  { platform: "Instagram", icon: "ExternalLink", href: "https://www.instagram.com/kcatchproduction?stkn=MTc3YnRicGd3N2pjcw==" },
+  { platform: "LinkedIn", icon: "ExternalLink", href: "https://in.linkedin.com/company/kcatch-media-production" },
 ];

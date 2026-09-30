@@ -132,7 +132,7 @@ export function FeaturedWorkSection() {
         const metrics = scenes[i];
         const sceneCenterInViewport = metrics.left + trackX + metrics.width / 2;
         const distanceFromCenter = Math.abs(sceneCenterInViewport - viewportCenter);
-        
+
         // Track the closest scene for activeIndex
         if (distanceFromCenter < minDistance) {
           minDistance = distanceFromCenter;
@@ -377,6 +377,7 @@ export function FeaturedWorkSection() {
               size="md"
               color="white"
               rotation={-2}
+              className="font-aptos"
             />
           </div>
 

@@ -2,12 +2,18 @@
 // "OUR FAMILY" client logo grid.
 // Paper section with client logo placeholders.
 
-import Image from "next/image";
-import { FAMILY_BRANDS, FAMILY_SECTION } from "@/content/site";
+import { FAMILY_SECTION } from "@/content/site";
+import { LOGOS } from "@/content/logos";
 import { PaperSection } from "@/components/graphics/paper-section";
 import { HandwrittenNote } from "@/components/graphics/handwritten-note";
 import { Reveal } from "@/components/motion/reveal";
 import { Container } from "@/components/layout/container";
+import { DriftWall, type DriftWallItem } from "@/components/graphics/drift-wall";
+
+const familyLogoItems: DriftWallItem[] = LOGOS.map((logo) => ({
+  image: logo.src,
+  title: logo.alt,
+}));
 
 export function FamilySection() {
   return (
@@ -36,59 +42,30 @@ export function FamilySection() {
           />
         </div>
 
-        {/* Logo grid — client names carry real editorial weight (display
-            font, larger scale) rather than reading as tiny incidental
-            text dwarfed by the headline above them. */}
-        <div
-          className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-8 gap-y-10 md:gap-x-12 md:gap-y-14"
-          role="list"
-          aria-label="KCATCH clients"
-        >
-          {FAMILY_BRANDS.map((brand, i) => (
-            // Capped, not i * 0.05 uncapped: with 35 brands that was up to
-            // 1.7s of extra delay before the LAST tile even started its
-            // 0.7s reveal (~2.4s total) — the section's own grid/heading
-            // structure was already visible immediately, but individual
-            // tiles kept trickling in long after, reading as "still empty"
-            // well after the section had actually loaded. The stagger
-            // "wave" feel is preserved for the first ~10 tiles; it just
-            // doesn't keep growing for all 35.
-            <Reveal key={brand.id} direction="up" delay={Math.min(i * 0.03, 0.3)}>
-              <div
-                className="relative flex items-center justify-center h-16 md:h-20 border-b border-kc-black/10 pb-4 opacity-80 hover:opacity-100 transition-opacity duration-300"
-                role="listitem"
-                title={brand.name}
-              >
-                {brand.logo ? (
-                  // Real logo asset — natural aspect ratio, never stretched/cropped.
-                  <Image
-                    src={brand.logo}
-                    alt={brand.alt}
-                    width={160}
-                    height={64}
-                    className="max-h-12 md:max-h-16 w-auto h-auto object-contain"
-                  />
-                ) : (
-                  // No approved logo asset yet for this brand — same
-                  // placeholder-name treatment the section already used
-                  // before this brand list was expanded.
-                  <div
-                    className="font-display text-kc-black uppercase tracking-wide text-center leading-none"
-                    style={{ fontSize: "clamp(1.1rem, 2.2vw, 1.6rem)" }}
-                    aria-label={brand.alt}
-                  >
-                    {brand.name}
-                  </div>
-                )}
-              </div>
-            </Reveal>
-          ))}
-        </div>
-
-        {/* "and many more..." */}
-        <p className="font-body text-kc-black/40 text-xs uppercase tracking-widest mt-12 text-center">
-          AND MANY MORE...
-        </p>
+        {/* Logo wall — drifting multi-column display of every client logo
+            in public/Logos (see content/logos.ts). Replaces the previous
+            text-name grid entirely; no brand names are rendered here. */}
+        <Reveal direction="up">
+          <DriftWall
+            items={familyLogoItems}
+            columns={5}
+            tileWidth={200}
+            tileHeight={132}
+            gap={18}
+            tilt={16}
+            turn={-14}
+            perspective={1200}
+            depth={120}
+            speed={42}
+            direction="up"
+            variance={0.45}
+            parallax={0.6}
+            lift={48}
+            fade={0.6}
+            dim={0.9}
+            aria-label="KCATCH clients"
+          />
+        </Reveal>
       </Container>
     </PaperSection>
   );

@@ -33,6 +33,7 @@
   --font-display: var(--font-anton), "Arial Black", sans-serif;
   --font-body: var(--font-archivo), system-ui, sans-serif;
   --font-hand: var(--font-caveat), "Comic Sans MS", cursive;
+  --font-aptos: "Aptos", "Aptos Display", "Calibri", "Segoe UI", system-ui, sans-serif;
 
   /* Type scale */
   --type-display-xl: clamp(4rem, 10vw, 10rem);
@@ -227,6 +228,10 @@
 
   .font-hand {
     font-family: var(--font-hand);
+  }
+
+  .font-aptos {
+    font-family: var(--font-aptos);
   }
 
   /* KCATCH text sizes */

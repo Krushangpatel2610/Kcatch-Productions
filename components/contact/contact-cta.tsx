@@ -47,14 +47,13 @@ function PolaroidSlot({
         aria-hidden="true"
       />
       <div
-        className="relative bg-kc-white p-3 pb-10 shadow-2xl"
-        style={{ width: 200, height: 240 }}
+        className="relative bg-kc-white p-2.5 pb-8 shadow-2xl w-[128px] h-[154px] sm:p-3 sm:pb-10 sm:w-[165px] sm:h-[198px] md:w-[200px] md:h-[240px]"
         aria-hidden="true"
       >
         <KcatchImage
           src={src}
           alt={label}
-          className="w-full h-[170px]"
+          className="w-full h-[108px] sm:h-[139px] md:h-[170px]"
           placeholderLabel="KC"
         />
         <HandwrittenNote

@@ -101,9 +101,10 @@ function InputField({
 export function ContactForm() {
   const [form, setForm] = useState<FormState>(INITIAL_STATE);
   const [errors, setErrors] = useState<FormErrors>({});
-  const [status, setStatus] = useState<"idle" | "submitting" | "success">(
+  const [status, setStatus] = useState<"idle" | "submitting" | "success" | "error">(
     "idle"
   );
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   const setField = (field: keyof FormState) => (value: string) =>
     setForm((prev) => ({ ...prev, [field]: value }));
@@ -119,17 +120,34 @@ export function ContactForm() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (status === "submitting") return;
+
     const newErrors = validateForm(form);
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
       return;
     }
     setErrors({});
+    setSubmitError(null);
     setStatus("submitting");
-    // TODO: connect to backend API when available
-    // Simulate async for UX architecture demonstration
-    await new Promise((res) => setTimeout(res, 1200));
-    setStatus("success");
+
+    try {
+      const res = await fetch("/api/contact", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(form),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new Error(data.error || "Failed to send message. Please try again.");
+      }
+      setStatus("success");
+    } catch (err) {
+      setSubmitError(
+        err instanceof Error ? err.message : "Failed to send message. Please try again."
+      );
+      setStatus("error");
+    }
   };
 
   if (status === "success") {
@@ -217,7 +235,7 @@ export function ContactForm() {
       </div>
 
       {/* Submit */}
-      <div className="flex items-center gap-6 pt-4">
+      <div className="flex flex-wrap items-center gap-x-6 gap-y-3 pt-4">
         <MagneticButton>
           <Button
             type="submit"
@@ -238,6 +256,11 @@ export function ContactForm() {
           {CONTACT_FORM.orNote}
         </p>
       </div>
+      {status === "error" && submitError && (
+        <p className="font-body text-xs text-red-600" role="alert">
+          {submitError}
+        </p>
+      )}
     </form>
   );
 }

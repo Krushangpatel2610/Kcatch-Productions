@@ -1,0 +1,146 @@
+/* components/graphics/drift-wall.module.css
+   DriftWall — multi-column drifting image wall with perspective/3D tilt,
+   depth, parallax, hover lift, edge fade and dim/overlay. Pure CSS
+   transforms + animations; JS only measures/observes and drives the
+   pointer-parallax tick (see drift-wall.tsx). */
+
+.viewport {
+  position: relative;
+  box-sizing: border-box;
+  width: 100%;
+  height: clamp(340px, 46vw, 560px);
+  padding-inline: clamp(20px, 4vw, 70px);
+  overflow: hidden;
+  perspective: var(--dw-perspective, 1200px);
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    transparent 0%,
+    black var(--dw-fade-pct, 20%),
+    black calc(100% - var(--dw-fade-pct, 20%)),
+    transparent 100%
+  );
+  mask-image: linear-gradient(
+    to bottom,
+    transparent 0%,
+    black var(--dw-fade-pct, 20%),
+    black calc(100% - var(--dw-fade-pct, 20%)),
+    transparent 100%
+  );
+}
+
+.wall {
+  display: flex;
+  align-items: flex-start;
+  /* Spreads fixed-width columns across the full measured width instead of
+     clumping them as one centered block — `gap` still applies as a MINIMUM
+     between columns, with space-between distributing any extra room. This
+     is native layout, recalculated by the browser only when the container
+     actually resizes, not on every animation frame. */
+  justify-content: space-between;
+  width: 100%;
+  height: 100%;
+  transform-style: preserve-3d;
+  transform: rotateX(calc(var(--dw-tilt, 0deg) + var(--dw-parallax-x, 0deg)))
+    rotateY(calc(var(--dw-turn, 0deg) + var(--dw-parallax-y, 0deg)));
+  will-change: transform;
+  /* No CSS transition here: --dw-parallax-x/y are already smoothed frame-by-frame
+     in JS (drift-wall.tsx). A CSS transition on the same property would restart
+     its own easing every time those custom properties change (every animation
+     frame while active), fighting the JS lerp and producing a jittery wobble. */
+}
+
+.column {
+  position: relative;
+  height: 100%;
+  overflow: hidden;
+  flex-shrink: 0;
+  transform: translateZ(var(--dw-depth, 0px));
+}
+
+.track {
+  display: flex;
+  flex-direction: column;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+  will-change: transform;
+}
+
+.trackUp {
+  animation-name: dwDriftUp;
+}
+
+.trackDown {
+  animation-name: dwDriftDown;
+}
+
+@keyframes dwDriftUp {
+  from {
+    transform: translateY(0);
+  }
+  to {
+    transform: translateY(-50%);
+  }
+}
+
+@keyframes dwDriftDown {
+  from {
+    transform: translateY(-50%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+.tile {
+  position: relative;
+  flex-shrink: 0;
+  z-index: 1;
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+  opacity: 1;
+  transition:
+    transform 0.35s cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 0.35s ease;
+  cursor: default;
+}
+
+/* Hover lift/dim is pure CSS — no React state, no re-render on hover.
+   :has() scopes the dim to "some tile in this wall is actually hovered",
+   not just "the pointer is somewhere over the wall" (which would dim
+   everything while the pointer sits in the gap between tiles). */
+.wall:has(.tile:hover) .tile:not(:hover),
+.wall:has(.tile:focus-within) .tile:not(:focus-within) {
+  opacity: var(--dw-dim, 1);
+}
+
+.tile:hover,
+.tile:focus-within {
+  z-index: 5;
+  opacity: 1;
+  transform: translateZ(var(--dw-lift, 64px)) scale(1.06);
+}
+
+.tileInner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  padding: 6%;
+}
+
+.tileImage {
+  object-fit: contain;
+  object-position: center;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .track {
+    animation: none !important;
+    transform: translateY(0) !important;
+  }
+}

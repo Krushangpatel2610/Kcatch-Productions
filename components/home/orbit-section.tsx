@@ -84,8 +84,14 @@ export function OrbitSection() {
                   aria-label={`Focus ${project.client}`}
                   aria-pressed={isActive}
                 >
+                  {/* Full name pill — desktop/tablet only. At mobile orbit
+                      diameters (~280-330px) these whitespace-nowrap pills
+                      overlap their neighbors around the ring, so mobile
+                      gets a compact number-only badge instead (below) with
+                      the full name still available via the button's
+                      aria-label. */}
                   <span
-                    className={`flex items-center gap-2 whitespace-nowrap rounded-full border px-3 py-1.5 font-display text-xs uppercase tracking-wider transition-colors ${
+                    className={`hidden md:flex items-center gap-2 whitespace-nowrap rounded-full border px-3 py-1.5 font-display text-xs uppercase tracking-wider transition-colors ${
                       isActive
                         ? "border-kc-yellow bg-kc-yellow text-kc-black"
                         : "border-kc-line bg-kc-surface-2/80 text-kc-white/70 hover:border-kc-yellow hover:text-kc-yellow"
@@ -96,6 +102,15 @@ export function OrbitSection() {
                         shared archive `number` field. */}
                     <span className="text-[10px] opacity-60">{String(i + 1).padStart(2, "0")}</span>
                     {project.client}
+                  </span>
+                  <span
+                    className={`flex md:hidden h-8 w-8 items-center justify-center rounded-full border font-display text-[10px] transition-colors ${
+                      isActive
+                        ? "border-kc-yellow bg-kc-yellow text-kc-black"
+                        : "border-kc-line bg-kc-surface-2/80 text-kc-white/70"
+                    }`}
+                  >
+                    {String(i + 1).padStart(2, "0")}
                   </span>
                 </button>
               );

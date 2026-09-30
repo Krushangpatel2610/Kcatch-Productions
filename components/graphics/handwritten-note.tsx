@@ -39,7 +39,10 @@ export function HandwrittenNote({
         colorMap[color],
         className
       )}
-      style={{ transform: `rotate(${rotation}deg)` }}
+      style={{
+        transform: `rotate(${rotation}deg)`,
+        ...(className?.includes("font-aptos") ? { fontFamily: "var(--font-aptos)" } : {}),
+      }}
     >
       {text}
     </p>
